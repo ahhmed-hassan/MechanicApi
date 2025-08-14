@@ -11,4 +11,9 @@
     <PackageReference Include="MediatR" Version="13.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="WorkOrders\Billing\" />
+    <Folder Include="WorkOrders\Events\" />
+  </ItemGroup>
+
 </Project>

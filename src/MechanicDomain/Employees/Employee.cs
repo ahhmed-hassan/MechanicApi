@@ -1,5 +1,6 @@
 ﻿using ErrorOr;
 using MechanicDomain.Abstractions;
+using MechanicDomain.Identity;
 namespace MechanicDomain.Employees;
 
 public sealed class Employee : AuditableEntity
@@ -25,20 +26,16 @@ public sealed class Employee : AuditableEntity
 
     public static ErrorOr<Employee> Create(Guid id, string firstName, string lastName, Role role)
     {
-        if (id == Guid.Empty)   
-            return EmployeeErrors.IdRequired;
-        
+        if (id == Guid.Empty) return EmployeeErrors.IdRequired;
 
-        if (string.IsNullOrWhiteSpace(firstName))       
-            return EmployeeErrors.FirstNameRequired;
-        
-        if (string.IsNullOrWhiteSpace(lastName))        
-            return EmployeeErrors.LastNameRequired;
-        
 
-        if (!Enum.IsDefined(role))        
-            return EmployeeErrors.RoleInvalid;
-        
+        if (string.IsNullOrWhiteSpace(firstName)) return EmployeeErrors.FirstNameRequired;
+
+        if (string.IsNullOrWhiteSpace(lastName)) return EmployeeErrors.LastNameRequired;
+
+
+        if (!Enum.IsDefined(role)) return EmployeeErrors.RoleInvalid;
+
 
         return new Employee(id, firstName.Trim(), lastName.Trim(), role);
     }

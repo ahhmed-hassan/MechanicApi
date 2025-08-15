@@ -43,4 +43,8 @@ public sealed class Part : AuditableEntity
 
         return new Part(id, name.Trim(), cost, quantity);
     }
+    //ToDO: Implement IClonable
+    public Part Clone() => new Part(Id, Name, Cost, Quantity);
+
+ 
 }

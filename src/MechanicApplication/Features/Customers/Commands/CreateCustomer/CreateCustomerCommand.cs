@@ -12,4 +12,4 @@ public sealed record CreateCustomerCommand(
     string Email,
     List<CreateVehicleCommand> Vehicles
 
-) : IRequest<ErrorOr<CustomerDto>>;
+) : IRequest<ErrorOr<CustomerDTO>>;

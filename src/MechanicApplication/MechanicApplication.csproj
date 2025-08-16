@@ -14,4 +14,8 @@
     <ProjectReference Include="..\MechanicDomain\MechanicDomain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Common\Behaviors\" />
+  </ItemGroup>
+
 </Project>

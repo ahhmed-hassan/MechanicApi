@@ -1,6 +1,8 @@
-﻿namespace MechanicDomain.WorkOrders.Enums
+﻿namespace MechanicDomain.WorkOrders.Enums;
+public enum WorkOrderState
 {
-    public class WorkOrderState
-    {
-    }
+    Scheduled,
+    InProgress,
+    Completed,
+    Cancelled
 }

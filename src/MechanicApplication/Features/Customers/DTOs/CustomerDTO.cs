@@ -7,7 +7,7 @@ public record CustomerDto(
     string Name,
     string PhoneNumber,
     string Email,
-    ImmutableList<VehicleDto> Vehicles)
+    ImmutableList<VehicleDTO> Vehicles)
 {
     public virtual bool Equals(CustomerDto? other)
         => other is not null && CustomerId == other.CustomerId;

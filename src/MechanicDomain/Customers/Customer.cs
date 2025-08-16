@@ -9,6 +9,7 @@ namespace MechanicDomain.Customers;
 
     public sealed class Customer : AuditableEntity
     {
+    //TODO: Wrap string in a Non NullableString type to ensure it is never null or empty
         public string? Name { get; private set; }
         public string? PhoneNumber { get; private set; }
         public string? Email { get; private set; }

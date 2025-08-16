@@ -1,13 +1,141 @@
-﻿using MechanicDomain.Abstractions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ErrorOr; 
+﻿using ErrorOr;
+using MechanicDomain.Abstractions;
+using MechanicDomain.Customers.Vehicles;
+using MechanicDomain.Employees;
+using MechanicDomain.RepairTasks;
+using MechanicDomain.WorkOrders.Billing;
+using MechanicDomain.WorkOrders.Enums;
+
 namespace MechanicDomain.WorkOrders;
 
-    public sealed class WorkOrder : AuditableEntity
+public sealed class WorkOrder : AuditableEntity
+{
+    public Guid VehicleId { get; }
+    public DateTimeOffset StartAtUtc { get; private set; }
+    public DateTimeOffset EndAtUtc { get; private set; }
+    public Guid LaborId { get; private set; }
+    public Spot Spot { get; private set; }
+    public WorkOrderState State { get; private set; }
+    public Employee? Labor { get; set; }
+    public Vehicle? Vehicle { get; set; }
+    public Invoice? Invoice { get; set; }
+    public decimal? Discount { get; private set; }
+    public decimal? Tax { get; private set; }
+    public decimal? TotalPartsCost => _repairTasks.SelectMany(rt => rt.Parts).Sum(p => p.Cost);
+    public decimal? TotalLaborCost => _repairTasks.Sum(rt => rt.LaborCost);
+    public decimal? Total => (TotalPartsCost ?? 0) + (TotalLaborCost ?? 0);
+
+    private readonly List<RepairTask> _repairTasks = [];
+    public IEnumerable<RepairTask> RepairTasks => _repairTasks.AsReadOnly();
+
+    private WorkOrder()
+    { }
+
+    private WorkOrder(Guid id, Guid vehicleId, DateTimeOffset startAt, DateTimeOffset endAt, Guid laborId, Spot spot, WorkOrderState state, List<RepairTask> repairTasks)
+        : base(id)
     {
+        VehicleId = vehicleId;
+        StartAtUtc = startAt;
+        EndAtUtc = endAt;
+        LaborId = laborId;
+        Spot = spot;
+        State = state;
+        _repairTasks = repairTasks;
     }
+
+    public static ErrorOr<WorkOrder> Create(Guid id, Guid vehicleId, DateTimeOffset startAt, DateTimeOffset endAt, Guid laborId, Spot spot, List<RepairTask> repairTasks)
+    {
+        if (id == Guid.Empty)
+            return WorkOrderErrors.WorkOrderIdRequired;
+        if (vehicleId == Guid.Empty)
+            return WorkOrderErrors.VehicleIdRequired;
+        if (repairTasks == null || repairTasks.Count == 0)
+            return WorkOrderErrors.RepairTasksRequired;
+        if (laborId == Guid.Empty)
+            return WorkOrderErrors.LaborIdRequired;
+        if (endAt <= startAt)
+            return WorkOrderErrors.InvalidTiming;
+        if (!Enum.IsDefined(spot))
+            return WorkOrderErrors.SpotInvalid;
+
+        return new WorkOrder(id, vehicleId, startAt, endAt, laborId, spot, WorkOrderState.Scheduled, repairTasks);
+    }
+    private bool IsEditable => State is not (WorkOrderState.Completed or WorkOrderState.Cancelled or WorkOrderState.InProgress);
+    public ErrorOr<Updated> AddRepairTask(RepairTask repairTask)
+    {
+        if (!IsEditable)
+            return WorkOrderErrors.Readonly;
+
+        if (_repairTasks.Any(rt => rt.Id == repairTask.Id))
+            return WorkOrderErrors.RepairTaskAlreadyAdded;
+
+        _repairTasks.Add(repairTask);
+        return Result.Updated;
+    }
+
+    public ErrorOr<Updated> UpdateTiming(DateTimeOffset startAt, DateTimeOffset endAt)
+    {
+        if (!IsEditable)
+            return WorkOrderErrors.TimingReadonly(Id.ToString(), State);
+
+        if (endAt <= startAt)
+            return WorkOrderErrors.InvalidTiming;
+
+        StartAtUtc = startAt;
+        EndAtUtc = endAt;
+
+        return Result.Updated;
+    }
+
+    public ErrorOr<Updated> UpdateLabor(Guid laborId)
+    {
+        if (!IsEditable)
+            return WorkOrderErrors.Readonly;
+
+        if (laborId == Guid.Empty)
+            return WorkOrderErrors.LaborIdEmpty(Id.ToString());
+        LaborId = laborId;
+        return Result.Updated;
+    }
+
+    private bool CanTransitionTo(WorkOrderState newStatus)
+    {
+        return (State, newStatus) switch
+        {
+            (WorkOrderState.Scheduled, WorkOrderState.InProgress) => true,
+            (WorkOrderState.InProgress, WorkOrderState.Completed) => true,
+            (_, WorkOrderState.Cancelled) when State != WorkOrderState.Completed => true,
+            _ => false
+        };
+    }
+    public ErrorOr<Updated> UpdateState(WorkOrderState newState)
+    {
+        if (!CanTransitionTo(newState))
+            return WorkOrderErrors.InvalidStateTransition(State, newState);
+
+        State = newState;
+
+        return Result.Updated;
+    }
+    public ErrorOr<Updated> Cancel()
+    {
+        if (State == WorkOrderState.Completed)
+            return WorkOrderErrors.InvalidStateTransition(State, WorkOrderState.Cancelled);
+        State = WorkOrderState.Cancelled;
+        return Result.Updated;
+    }
+    public ErrorOr<Updated> ClearRepairTasks()
+    {
+        if (!IsEditable) return WorkOrderErrors.Readonly;
+        _repairTasks.Clear();
+        return Result.Updated;
+    }
+    public ErrorOr<Updated> UpdateSpot(Spot newSpot)
+    {
+        if (!IsEditable) return WorkOrderErrors.Readonly;
+        if (!Enum.IsDefined(newSpot)) return WorkOrderErrors.SpotInvalid;
+        Spot = newSpot;
+        return Result.Updated;
+    }
+}
 

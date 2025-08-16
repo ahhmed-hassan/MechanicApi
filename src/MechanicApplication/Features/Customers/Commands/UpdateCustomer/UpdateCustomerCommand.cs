@@ -3,7 +3,7 @@ using MediatR;
 using System.Collections.Immutable;
 
 
-namespace MechanicApplication.Features.Customers.Commands;
+namespace MechanicApplication.Features.Customers.Commands.UpdateCustomer;
 
 public sealed record UpdateCustomerCommand(
  Guid CustomerId,

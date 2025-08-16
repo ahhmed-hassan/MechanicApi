@@ -1,7 +1,7 @@
 ﻿using ErrorOr;
 using MediatR;
 
-namespace MechanicApplication.Features.Customers.Commands;
+namespace MechanicApplication.Features.Customers.Commands.UpdateCustomer;
 
 public sealed record UpdateVehicleCommand(
  Guid? VehicleId,

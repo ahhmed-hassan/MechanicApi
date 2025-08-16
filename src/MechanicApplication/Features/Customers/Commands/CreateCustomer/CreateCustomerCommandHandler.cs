@@ -39,7 +39,7 @@ public class CreateCustomerCommandHandler
         Vehicle.Create(Guid.NewGuid(), v.Make, v.Model, v.Year, v.LicensePlate)
         ).ToList(); 
         
-        if(vehicles.Where(v => v.IsError).Select(e => e.FirstError).ToList() is { Count : > 0 } errors)
+        if(vehicles.Where(v => v.IsError).SelectMany(e => e.Errors).ToList() is { Count : > 0 } errors)
         {
             _logger.LogWarning("Customer creation aborted. Vehicles contain errors.");
             return errors; 

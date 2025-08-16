@@ -17,6 +17,10 @@
 
   <ItemGroup>
     <Folder Include="Common\Behaviors\" />
+    <Folder Include="Features\Customers\Commands\" />
+    <Folder Include="Features\Customers\DTOs\" />
+    <Folder Include="Features\Customers\DTOMappers\" />
+    <Folder Include="Features\Customers\Queries\" />
   </ItemGroup>
 
 </Project>

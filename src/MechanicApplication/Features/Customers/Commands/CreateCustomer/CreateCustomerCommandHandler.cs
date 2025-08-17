@@ -58,7 +58,7 @@ public class CreateCustomerCommandHandler
             {
                 _context.Customers.Add(customer);
                 await _context.SaveChangesAsync(cancellationToken);
-                await _cache.RemoveByTagAsync("customer", cancellationToken);
+                await _cache.RemoveByTagAsync(Constants.Cache.Customers.Single, cancellationToken);
                 _logger.LogInformation("Customer created successfully by Id : {CustomerId}.", customer.Id);
                
             }

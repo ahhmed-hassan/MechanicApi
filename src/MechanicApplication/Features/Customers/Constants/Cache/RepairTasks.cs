@@ -1,4 +1,4 @@
-﻿namespace MechanicApplication.Common.Constants.Cache;
+﻿namespace MechanicApplication.Features.Customers.Constants.Cache;
 
 internal static class RepairTasks
 {

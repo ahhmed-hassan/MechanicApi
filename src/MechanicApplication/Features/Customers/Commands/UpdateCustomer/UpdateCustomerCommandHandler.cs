@@ -33,7 +33,7 @@ public sealed class UpdateCustomerCommandHandler(
             return ApplicationErrors.CustomerNotFound;
         }
         List<ErrorOr<Vehicle>> vehicles = request.Vehicles.Select(v =>
-            Vehicle.Create(v.VehicleId, v.Make, v.Model, v.Year, v.LicensePlate)).ToList();
+            Vehicle.Create(v.VehicleId ?? Guid.NewGuid(), v.Make, v.Model, v.Year, v.LicensePlate)).ToList();
         if (vehicles.Where(v => v.IsError).SelectMany(e => e.Errors).ToList() is { Count: > 0 } errors)
         {
             _logger.LogWarning("Customer update aborted. Vehicles contain errors.");

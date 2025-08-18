@@ -1,13 +1,17 @@
 ﻿using Asp.Versioning;
+using ErrorOr;
 using MechanicApplication.Features.Customers.Commands.CreateCustomer;
+using MechanicApplication.Features.Customers.Commands.UpdateCustomer;
 using MechanicApplication.Features.Customers.DTOs;
 using MechanicApplication.Features.Customers.Queries.GetCustoemerByID;
 using MechanicApplication.Features.Customers.Queries.GetCustomers;
 using MechanicContracts.Requests.Customers;
+using MechanicDomain.Identity;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
+using System.Collections.Immutable;
 
 namespace MechanicApi.Controllers;
 
@@ -54,6 +58,7 @@ public class CustomersController(ISender sender) : ApiBaseController
             Problem);
     }
     [HttpPost]
+    [Authorize(Policy = "ManagerOnly")]
     [ProducesResponseType<CustomerDTO>(StatusCodes.Status201Created)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
@@ -81,6 +86,35 @@ public class CustomersController(ISender sender) : ApiBaseController
 
         return result.Match(
             customer => CreatedAtRoute("GetCustomerById", new { version = currentVersion,  customerId = customer.CustomerId }, customer),
+            Problem);
+    }
+    [HttpPut("{customerId:guid}")]
+    [Authorize(Roles = nameof(Role.Manager))]
+    [ProducesResponseType<CustomerDTO>(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Updates an existing customer")]
+    [EndpointDescription("Updates an existing customer associated with the current user")]
+    [EndpointName("UpdateCustomer")]
+    [MapToApiVersion("1.0")]
+    public async Task<ActionResult<Updated>> Update(Guid customerId, [FromBody] UpdateCustomerRequest request, CancellationToken cancellationToken)
+    {
+        var updateVehiclesRequest = request.Vehicles.Select(v => new UpdateVehicleCommand(
+            v.VehicleId,
+            v.Make,
+            v.Model,
+            v.Year,
+            v.LicensePlate)).ToList();
+        var result = await sender.Send(new UpdateCustomerCommand(
+            customerId,
+            request.Name,
+            request.PhoneNumber,
+            request.Email,
+            updateVehiclesRequest.ToImmutableList())
+            , cancellationToken);
+        return result.Match(
+           _ => NoContent(),
             Problem);
     }
 }

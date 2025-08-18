@@ -1,9 +1,11 @@
 ﻿using Asp.Versioning;
-using Asp.Versioning;
+using MechanicApi.Infrastructure;
+using MechanicApi.Services;
+using MechanicApplication.Common.Interfaces;
 using Microsoft.AspNetCore.RateLimiting;
+using Serilog;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
-using Serilog;
 
 namespace Microsoft.Extensions.DependencyInjection;
 
@@ -70,6 +72,18 @@ public static class DependencyInjection
         return services;
     }
 
+    public static IServiceCollection AddGlobalExceptionHandler(this IServiceCollection services)
+    {
+        services.AddExceptionHandler<GlobalExceptionHandler>();
+        return services;
+    }
+
+    public static IServiceCollection AddIdentityInfrastructure(this IServiceCollection services)
+    {
+        services.AddScoped<IUser, CurrentUser>();
+        services.AddHttpContextAccessor();
+        return services;
+    }
     //public static IServiceCollection AddConfiguredCors(this IServiceCollection services, IConfiguration configuration)
     //{
     //    var appSettings = configuration.GetSection("AppSettings").Get<AppSettings>()!;

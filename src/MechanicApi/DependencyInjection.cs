@@ -1,5 +1,5 @@
 ﻿using Asp.Versioning;
-using Asp.Versioning;
+using MechanicApi.Infrastructure;
 using MechanicApi.Services;
 using MechanicApplication.Common.Interfaces;
 using Microsoft.AspNetCore.RateLimiting;
@@ -72,6 +72,11 @@ public static class DependencyInjection
         return services;
     }
 
+    public static IServiceCollection AddGlobalExceptionHandler(this IServiceCollection services)
+    {
+        services.AddExceptionHandler<GlobalExceptionHandler>();
+        return services;
+    }
 
     public static IServiceCollection AddIdentityInfrastructure(this IServiceCollection services)
     {

@@ -15,8 +15,6 @@ public sealed class CreateCustomerRequest
     [EmailAddress(ErrorMessage = "Email is invalid.")]
     public string Email { get; set; } = string.Empty;
 
-
-    [ValidateComplexType]
     [MinLength(1, ErrorMessage = "At least one vehicle is required.")]
     public List<CreateVehicleRequest> Vehicles { get; set; } = [];
     

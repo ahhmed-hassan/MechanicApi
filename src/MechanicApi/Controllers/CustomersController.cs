@@ -1,6 +1,7 @@
 ﻿using Asp.Versioning;
 using ErrorOr;
 using MechanicApplication.Features.Customers.Commands.CreateCustomer;
+using MechanicApplication.Features.Customers.Commands.RemoveCustomer;
 using MechanicApplication.Features.Customers.Commands.UpdateCustomer;
 using MechanicApplication.Features.Customers.DTOs;
 using MechanicApplication.Features.Customers.Queries.GetCustoemerByID;
@@ -114,7 +115,24 @@ public class CustomersController(ISender sender) : ApiBaseController
             updateVehiclesRequest.ToImmutableList())
             , cancellationToken);
         return result.Match(
-           _ => NoContent(),
+           _ => NoContent() ,
             Problem);
     }
+    [HttpDelete("{customerId:guid}")]
+    [Authorize(Roles = nameof(Role.Manager))]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Deletes a customer")]
+    [EndpointDescription("Deletes a customer associated with the current user")]
+    [EndpointName("DeleteCustomer")]
+    [MapToApiVersion("1.0")]
+    public async Task<ActionResult<Deleted>> Delete(Guid customerId, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new RemoveCustomerCommand(customerId), cancellationToken);
+        return result.Match(
+            _ => NoContent(),
+            Problem);
+    }
+
 }

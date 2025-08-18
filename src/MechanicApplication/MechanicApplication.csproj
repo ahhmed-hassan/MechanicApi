@@ -16,8 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Common\Behaviors\" />
-    <Folder Include="Features\Customers\Queries\" />
+    <Folder Include="Features\Customers\Queries\GetCustoemerByID\" />
   </ItemGroup>
 
 </Project>

@@ -1,4 +1,5 @@
 ﻿using ErrorOr;
+using MechanicApplication.Features.Identity.DTOs;
 
 namespace MechanicApplication.Common.Interfaces;
 
@@ -8,14 +9,10 @@ public interface IIdenttiyService
 
     Task<bool> AuthorizeAsync(string userId, string? policyName);
 
-    Task<ErrorOr<AppUserDto>> AuthenticateAsync(string email, string password);
+    Task<ErrorOr<AppUserDTO>> AuthenticateAsync(string email, string password);
 
-    Task<ErrorOr<AppUserDto>> GetUserByIdAsync(string userId);
+    Task<ErrorOr<AppUserDTO>> GetUserByIdAsync(string userId);
 
     Task<string?> GetUserNameAsync(string userId);
 }
 
-//TODO: Deelte this soon
-public class AppUserDto
-{
-}

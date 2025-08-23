@@ -1,6 +1,7 @@
 ﻿using Asp.Versioning;
 using ErrorOr;
 using MechanicApplication.Features.RepairTasks.Commands.CreateRepairTask;
+using MechanicApplication.Features.RepairTasks.Commands.RemoveRepairTask;
 using MechanicApplication.Features.RepairTasks.DTOs;
 using MechanicApplication.Features.RepairTasks.Queries.GetRepairTasks;
 using MechanicApplication.Features.RepairTasks.Queries.GetRepiarTaskById;
@@ -75,5 +76,20 @@ public sealed class RepairTasksController(ISender sender) : ApiBaseController
     {
        var result = await sender.Send(new GetRepairTaskByIdQuery(repairTaskId), cancellationToken);
          return result.Match(Ok, Problem);
+    }
+
+    [HttpDelete("{repairTaskId:guid}")]
+    [Authorize(Roles = nameof(Role.Manager))]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Deletes a repair task by id")]
+    [EndpointDescription("Deletes a repair task by id")]
+    [EndpointName("DeleteRepairTask")]
+    [MapToApiVersion("1.0")]
+    public async Task<IActionResult> Delete(Guid repairTaskId, CancellationToken cancellationToken)
+    {
+        var result = await sender.Send(new RemoveRepairTaskCommand(repairTaskId), cancellationToken);
+        return result.Match(_ => NoContent(), Problem);
     }
 }

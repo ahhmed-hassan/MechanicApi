@@ -39,7 +39,7 @@ public sealed class RemoveCustomerCommandHandler(
         }
         _context.Customers.Remove(customer);
         await _context.SaveChangesAsync(cancellationToken);
-        await _cache.RemoveAsync(Constants.Cache.Customers.Single, cancellationToken);
+        await _cache.RemoveAsync(Features.Constants.Cache.Customers.Single, cancellationToken);
         _logger.LogInformation("Customer with ID {CustomerId} has been removed successfully.", request.CustomerId);
         return Result.Deleted;
 

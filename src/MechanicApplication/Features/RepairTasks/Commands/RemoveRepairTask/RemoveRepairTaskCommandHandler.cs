@@ -43,6 +43,6 @@ public sealed class RemoveRepairTaskCommandHandler(
         return Result.Deleted;
 
 
-        throw new NotImplementedException();
+        
     }
 }

@@ -18,7 +18,6 @@
   <ItemGroup>
     <Folder Include="Features\Customers\Queries\GetCustoemerByID\" />
     <Folder Include="Features\Identity\Queries\GetUserInfo\" />
-    <Folder Include="Features\RepairTasks\Commands\" />
   </ItemGroup>
 
 </Project>

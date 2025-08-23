@@ -1,7 +1,9 @@
 ﻿using Asp.Versioning;
+using ErrorOr;
 using MechanicApplication.Features.RepairTasks.Commands.CreateRepairTask;
 using MechanicApplication.Features.RepairTasks.DTOs;
 using MechanicApplication.Features.RepairTasks.Queries.GetRepairTasks;
+using MechanicApplication.Features.RepairTasks.Queries.GetRepiarTaskById;
 using MechanicContracts.Requests.RepairTasks;
 using MechanicDomain.Identity;
 using MechanicDomain.RepairTasks.Enums;
@@ -61,9 +63,17 @@ public sealed class RepairTasksController(ISender sender) : ApiBaseController
             );
 
     }
-
-    private object GetById()
+    [HttpGet("{repairTaskId:guid}", Name = nameof(GetById))]
+    [ProducesResponseType<RepairTaskDTO>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
+    [EndpointSummary("Gets a repair task by id")]
+    [EndpointDescription("Gets a repair task by id including parts")]
+    [EndpointName("GetRepairTaskById")]
+    [MapToApiVersion("1.0")]
+    public async Task<IActionResult> GetById(Guid repairTaskId, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+       var result = await sender.Send(new GetRepairTaskByIdQuery(repairTaskId), cancellationToken);
+         return result.Match(Ok, Problem);
     }
 }

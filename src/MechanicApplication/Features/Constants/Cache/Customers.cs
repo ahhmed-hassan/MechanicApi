@@ -1,4 +1,4 @@
-﻿namespace MechanicApplication.Features.Customers.Constants.Cache;
+﻿namespace MechanicApplication.Features.Constants.Cache;
 
 internal static class Customers
 {

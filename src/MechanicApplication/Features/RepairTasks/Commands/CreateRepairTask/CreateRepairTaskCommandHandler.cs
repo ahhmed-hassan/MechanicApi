@@ -49,7 +49,7 @@ public sealed class CreateRepairTaskCommandHandler(
         {
             _context.RepairTasks.Add(repairTask);
             await _context.SaveChangesAsync(cancellationToken);
-            await _cache.RemoveByTagAsync(Features.Customers.Constants.Cache.RepairTasks.Single, cancellationToken);
+            await _cache.RemoveByTagAsync(Constants.Cache.RepairTasks.Single, cancellationToken);
         })
             .Then(repairTask => repairTask.ToDto());
 

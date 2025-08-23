@@ -1,7 +1,7 @@
 ﻿namespace MechanicApplication.Features.RepairTasks.DTOs;
 
 public sealed record PartDTO(
-    Guid ID, 
+    Guid Id, 
     decimal Cost,
     int Quantity,
     string Name = ""

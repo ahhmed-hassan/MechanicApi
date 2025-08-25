@@ -2,6 +2,7 @@
 using ErrorOr;
 using MechanicApplication.Common.Errors;
 using MechanicApplication.Common.Interfaces;
+using MechanicApplication.Features.WorkOrders.Services;
 using MechanicDomain.Abstractions;
 using MechanicDomain.WorkOrders.Events;
 using MediatR;
@@ -15,6 +16,7 @@ namespace MechanicApplication.Features.WorkOrders.Commands.RelocateWorkOrder
         IAppDbContext context, 
         ILogger<RelocateWorkOrderCommandHandler> logger, 
         IWorkOrderPolicy workOrderPolicy, 
+        AvailabilityChecker availabilityChecker,
         HybridCache cache
 
         ) : IRequestHandler<RelocateWorkOrderCommand, ErrorOr<Updated>>
@@ -24,6 +26,7 @@ namespace MechanicApplication.Features.WorkOrders.Commands.RelocateWorkOrder
         private readonly ILogger<RelocateWorkOrderCommandHandler> _logger = logger;
         private readonly IWorkOrderPolicy _timeValidator = workOrderPolicy;
         private readonly HybridCache _cache = cache;
+        private readonly AvailabilityChecker _availabilityChecker = availabilityChecker;    
         public async Task<ErrorOr<Updated>> Handle(RelocateWorkOrderCommand request, CancellationToken cancellationToken)
         {
             var workOrder = await _context.WorkOrders
@@ -38,7 +41,7 @@ namespace MechanicApplication.Features.WorkOrders.Commands.RelocateWorkOrder
             }
             var duration = workOrder.EndAtUtc.Subtract(workOrder.StartAtUtc).Duration();
             var endAt = request.NewStartAt.Add(duration);
-            var available = await _timeValidator.IsSpotAvailableAsync(
+            var available = await _availabilityChecker.CheckSpotAvailabilityAsync(
                 request.NewSpot, 
                 request.NewStartAt, 
                 endAt, 
@@ -47,11 +50,11 @@ namespace MechanicApplication.Features.WorkOrders.Commands.RelocateWorkOrder
             available.Switch(_ => { },
                 _ => _logger.LogError("spot {Spot} is not available", workOrder.Spot.ToString())
                 );
-            return await available.FailIf(_ =>  _timeValidator.IsLaborOccupied(workOrder.LaborId,
+            return await available.FailIf(_ =>  _availabilityChecker.IsLaborOccupied(workOrder.LaborId,
                                                                   workOrder.Id,
                                                                   workOrder.StartAtUtc,
                                                                   endAt).Result, ApplicationErrors.LaborOccupied)
-                .FailIf(_ => _timeValidator.IsVehicleAlreadyScheduled(workOrder.VehicleId,
+                .FailIf(_ => _availabilityChecker.IsVehicleAlreadyScheduled(workOrder.VehicleId,
                                                                       workOrder.StartAtUtc,
                                                                       endAt).Result
                 , ApplicationErrors.VehicleSchedulingConflict)
@@ -66,7 +69,7 @@ namespace MechanicApplication.Features.WorkOrders.Commands.RelocateWorkOrder
                     await _cache.RemoveByTagAsync(Constants.Cache.WorkOrders.Single, cancellationToken);
                 });
 
-            throw new NotImplementedException();
+            
         }
     }
 }

@@ -61,6 +61,7 @@ namespace MechanicApplication.Features.WorkOrders.Commands.RelocateWorkOrder
                 .Else(error => { _logger.LogError("Failed to update spot : {Error}", error.First()); return error; })
                 .ThenDoAsync(async _ => 
                 {
+                    await _context.SaveChangesAsync(cancellationToken);
                     workOrder.AddDomainEvent(new WorkOrderCollectionModified());
                     await _cache.RemoveByTagAsync(Constants.Cache.WorkOrders.Single, cancellationToken);
                 });

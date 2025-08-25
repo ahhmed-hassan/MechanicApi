@@ -10,4 +10,8 @@
     <Folder Include="Requests\Customers\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\MechanicDomain\MechanicDomain.csproj" />
+  </ItemGroup>
+
 </Project>

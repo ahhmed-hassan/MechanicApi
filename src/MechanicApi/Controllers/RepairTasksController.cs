@@ -6,6 +6,7 @@ using MechanicApplication.Features.RepairTasks.Commands.UpdateRepairTask;
 using MechanicApplication.Features.RepairTasks.DTOs;
 using MechanicApplication.Features.RepairTasks.Queries.GetRepairTasks;
 using MechanicApplication.Features.RepairTasks.Queries.GetRepiarTaskById;
+using MechanicApplication.Features.WorkOrders.Commands.RelocateWorkOrder;
 using MechanicContracts.Requests.RepairTasks;
 using MechanicDomain.Identity;
 using MechanicDomain.RepairTasks.Enums;
@@ -119,4 +120,6 @@ public sealed class RepairTasksController(ISender sender) : ApiBaseController
         var result = await sender.Send(new RemoveRepairTaskCommand(repairTaskId), cancellationToken);
         return result.Match(_ => NoContent(), Problem);
     }
+
+    
 }

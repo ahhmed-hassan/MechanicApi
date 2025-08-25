@@ -18,6 +18,9 @@
   <ItemGroup>
     <Folder Include="Features\Customers\Queries\GetCustoemerByID\" />
     <Folder Include="Features\Identity\Queries\GetUserInfo\" />
+    <Folder Include="Features\WorkOrders\DTOs\" />
+    <Folder Include="Features\WorkOrders\Mappers\" />
+    <Folder Include="Features\WorkOrders\Queries\" />
   </ItemGroup>
 
 </Project>

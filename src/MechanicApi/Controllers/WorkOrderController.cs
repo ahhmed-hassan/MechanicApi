@@ -2,8 +2,7 @@
 using ErrorOr;
 using MechanicApplication.Features.WorkOrders.Commands.AssignLabor;
 using MechanicApplication.Features.WorkOrders.Commands.RelocateWorkOrder;
-using MechanicContracts.Requests.RepairTasks;
-using MechanicContracts.WorkOrders;
+using MechanicContracts.Requests.WorkOrders;
 using MechanicDomain.Identity;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;

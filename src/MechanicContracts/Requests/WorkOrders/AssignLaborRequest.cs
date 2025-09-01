@@ -1,8 +1,6 @@
-﻿
+﻿using System.ComponentModel.DataAnnotations;
 
-using System.ComponentModel.DataAnnotations;
-
-namespace MechanicContracts.WorkOrders;
+namespace MechanicContracts.Requests.WorkOrders;
 
 public class AssignLaborRequest
 {

@@ -1,6 +1,10 @@
 ﻿using Asp.Versioning;
+using ErrorOr;
+using MechanicApplication.Features.WorkOrders.Commands.AssignLabor;
 using MechanicApplication.Features.WorkOrders.Commands.RelocateWorkOrder;
 using MechanicContracts.Requests.RepairTasks;
+using MechanicContracts.WorkOrders;
+using MechanicDomain.Identity;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -26,6 +30,24 @@ namespace MechanicApi.Controllers
             var result = await sender.Send(relocateCommand, cancellationToken);
             return result.Match(_ => NoContent(), Problem);
 
+        }
+
+
+        [HttpPut("{workOrderId:guid}/labor")]
+        [Authorize(Policy = nameof(Role.Manager))]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+        [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
+        [EndpointSummary("Assigns a labor to a workorder")]
+        [EndpointDescription("assigning some work order (With the same time and spot and everything) to another labor")]
+        [EndpointName("AssignLaborToWorkOrder")]
+        
+        public async Task<ActionResult<Updated>> AssignLabor(Guid workOrderId, AssignLaborRequest request, CancellationToken ct)
+        {
+            var assignLaborCommand = new AssignLaborCommand(workOrderId, Guid.Parse(request.LaborId));
+            var result = await sender.Send(assignLaborCommand);
+            return result.Match(_ => NoContent(), Problem);
         }
     }
 }

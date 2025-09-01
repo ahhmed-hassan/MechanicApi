@@ -12,7 +12,7 @@ namespace MechanicApi.Controllers
     [ApiVersion("1.0")]
     public class WorkOrderController(ISender sender) : ApiBaseController
     {
-        [HttpPost("{workOrderId:guid}")]
+        [HttpPost("{workOrderId:guid}/relocate")]
         [ProducesResponseType<NoContentResult>(StatusCodes.Status204NoContent)]
         [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
         [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]

@@ -5,7 +5,7 @@ using MediatR;
 
 namespace MechanicApplication.Features.WorkOrders.Commands.AssignLabor;
 
-public record AssignLaborCommand(Guid WokrOrder, Guid Labor): IRequest<ErrorOr<Updated>>; 
+public sealed record AssignLaborCommand(Guid WokrOrder, Guid Labor): IRequest<ErrorOr<Updated>>; 
 
 public sealed class AssignLaborCommandValidator:AbstractValidator<AssignLaborCommand>
 {

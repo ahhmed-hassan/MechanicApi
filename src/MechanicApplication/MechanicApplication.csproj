@@ -7,6 +7,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Features\WorkOrders\DTOs\**" />
+    <Compile Remove="Features\WorkOrders\Mappers\**" />
+    <Compile Remove="Features\WorkOrders\Queries\**" />
+    <EmbeddedResource Remove="Features\WorkOrders\DTOs\**" />
+    <EmbeddedResource Remove="Features\WorkOrders\Mappers\**" />
+    <EmbeddedResource Remove="Features\WorkOrders\Queries\**" />
+    <None Remove="Features\WorkOrders\DTOs\**" />
+    <None Remove="Features\WorkOrders\Mappers\**" />
+    <None Remove="Features\WorkOrders\Queries\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.8" />
   </ItemGroup>
@@ -18,9 +30,6 @@
   <ItemGroup>
     <Folder Include="Features\Customers\Queries\GetCustoemerByID\" />
     <Folder Include="Features\Identity\Queries\GetUserInfo\" />
-    <Folder Include="Features\WorkOrders\DTOs\" />
-    <Folder Include="Features\WorkOrders\Mappers\" />
-    <Folder Include="Features\WorkOrders\Queries\" />
   </ItemGroup>
 
 </Project>

@@ -1,12 +1,16 @@
 ﻿using Asp.Versioning;
 using ErrorOr;
+using MechanicApplication.Common.Constants;
 using MechanicApplication.Features.WorkOrders.Commands.AssignLabor;
 using MechanicApplication.Features.WorkOrders.Commands.RelocateWorkOrder;
+using MechanicApplication.Features.WorkOrders.Commands.UpdateWorkOrderState;
 using MechanicContracts.Requests.WorkOrders;
 using MechanicDomain.Identity;
+using MechanicInfrastructure.Identity.Policies;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.AccessControl;
 
 namespace MechanicApi.Controllers
 {
@@ -47,6 +51,24 @@ namespace MechanicApi.Controllers
             var assignLaborCommand = new AssignLaborCommand(workOrderId, Guid.Parse(request.LaborId));
             var result = await sender.Send(assignLaborCommand);
             return result.Match(_ => NoContent(), Problem);
+        }
+
+        [HttpPut("{workOrderId:guid}/state")]
+        [Authorize(Policy = AuhtorizationConstants.SelfScopedWorkedOrderAccess)]
+        [Authorize(Roles = nameof(Role.Labor) + "," + nameof(Role.Manager))]
+        [ProducesResponseType<Updated>(StatusCodes.Status200OK)]
+        [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+        [EndpointSummary("Updates the state of a work order")]
+        [EndpointDescription("Updates the state of a work order, such as from 'Scheduled' to 'In Progress' or 'Completed' The due start date should not be of course in the future")]
+        [EndpointName("UpdateWorkOrderState")]
+        public async Task<ActionResult<Updated>> UpdateState(Guid workOrderId,UpdateWorkOrderStateRequest request , CancellationToken ct)
+        {
+            var updateWorkOrderCommand = new UpdateWorkOrderState(workOrderId,
+                                                                  (MechanicDomain.WorkOrders.Enums.WorkOrderState)request.State);
+            var result = await sender.Send(updateWorkOrderCommand, ct);
+            return result.Match (_ => NoContent(), Problem);
+            
         }
     }
 }

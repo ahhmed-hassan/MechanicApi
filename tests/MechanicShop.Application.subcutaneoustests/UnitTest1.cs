@@ -1,4 +1,6 @@
-﻿namespace MechanicShop.Application.subcutaneoustests;
+﻿using Xunit;
+
+namespace MechanicShop.Application.subcutaneoustests;
 
 public class UnitTest1
 {

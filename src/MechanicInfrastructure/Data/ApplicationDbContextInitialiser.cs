@@ -96,15 +96,6 @@ public class ApplicationDbContextInitialiser(
             EmailConfirmed = true
         };
 
-        if (_userManager.Users.All(u => u.Email != labor01.Email))
-        {
-            await _userManager.CreateAsync(labor01, labor01.Email);
-
-            if (!string.IsNullOrWhiteSpace(laborRole.Name))
-            {
-                await _userManager.AddToRolesAsync(labor01, [laborRole.Name]);
-            }
-        }
 
         var labor02 = new AppUser
         {
@@ -114,33 +105,13 @@ public class ApplicationDbContextInitialiser(
             EmailConfirmed = true
         };
 
-        if (_userManager.Users.All(u => u.Email != labor02.Email))
-        {
-            await _userManager.CreateAsync(labor02, labor02.Email);
-
-            if (!string.IsNullOrWhiteSpace(laborRole.Name))
-            {
-                await _userManager.AddToRolesAsync(labor02, [laborRole.Name]);
-            }
-        }
-
-        var labor03 = new AppUser
+       var labor03 = new AppUser
         {
             Id = "e17c83de-1089-4f19-bf79-5f789133d37f",
             Email = "kevin.labor@localhost",
             UserName = "kevin.labor@localhost",
             EmailConfirmed = true
         };
-
-        if (_userManager.Users.All(u => u.Email != labor03.Email))
-        {
-            await _userManager.CreateAsync(labor03, labor03.Email);
-
-            if (!string.IsNullOrWhiteSpace(laborRole.Name))
-            {
-                await _userManager.AddToRolesAsync(labor03, [laborRole.Name]);
-            }
-        }
 
         var labor04 = new AppUser
         {
@@ -149,15 +120,18 @@ public class ApplicationDbContextInitialiser(
             UserName = "suzan.labor@localhost",
             EmailConfirmed = true
         };
+        List<AppUser> laborObjects = new() {labor01, labor02, labor03, labor04};
+        AppUser[] laborsAndEmployee = [..laborObjects, manager];
 
-
-        if (_userManager.Users.All(u => u.Email != labor04.Email))
+        foreach (AppUser labor in laborObjects)
         {
-            await _userManager.CreateAsync(labor04, labor04.Email);
-
-            if (!string.IsNullOrWhiteSpace(laborRole.Name))
+            if (_userManager.Users.All(u => u.Email != labor.Email))
             {
-                await _userManager.AddToRolesAsync(labor04, [laborRole.Name]);
+                await _userManager.CreateAsync(labor, labor.Email);
+                if (!string.IsNullOrWhiteSpace(laborRole.Name))
+                {
+                    await _userManager.AddToRolesAsync(labor, [laborRole.Name]);
+                }
             }
         }
 
@@ -209,7 +183,7 @@ public class ApplicationDbContextInitialiser(
         {
             var repairTasks = _context.RepairTasks.ToList();
             var vehicles = _context.Vehicles.ToList();
-            string[] labors = [labor01.Id, labor02.Id, labor03.Id, labor04.Id];
+            string[] laborIds = [..laborObjects.Select(x=>x.Id)];
             Spot[] spots = [Spot.A, Spot.B, Spot.C, Spot.D];
 
             var generatedWorkOrders = new List<WorkOrder>();
@@ -238,7 +212,7 @@ public class ApplicationDbContextInitialiser(
                                             .OrderBy(_ => Guid.NewGuid())
                                             .Take(Random.Shared.Next(1, Math.Min(4, repairTasks.Select(t => t.Id).Distinct().Count())))
                                             .ToList();
-                        var laborId = labors[random.Next(labors.Length)];
+                        var laborId = laborIds[random.Next(laborIds.Length)];
                         var duration = selectedTask.Sum(st => (int)st.EstimatedDurationInMins);
 
                         if (occupiedMinutes + duration > maxOccupancy)

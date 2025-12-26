@@ -15,7 +15,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 
-namespace MechanicInfrastructure.Data;
+namespace MechanicInfrastructure.Data.Migrations;
 
 public class AppDbContext
     (

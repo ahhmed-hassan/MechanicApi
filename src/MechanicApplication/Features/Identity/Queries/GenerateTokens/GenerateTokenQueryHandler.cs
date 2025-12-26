@@ -2,7 +2,7 @@
 using MechanicApplication.Common.Interfaces;
 using MediatR;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
+//using Microsoft.IdentityModel.Tokens;
 
 namespace MechanicApplication.Features.Identity.Queries.GenerateTokens;
 

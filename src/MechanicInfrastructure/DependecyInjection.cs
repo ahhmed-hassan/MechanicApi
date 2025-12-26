@@ -1,10 +1,18 @@
 ﻿
 using MechanicDomain.Identity;
+using MechanicInfrastructure.Data.Interceptors;
+using MechanicInfrastructure.Data.Migrations;
 using MechanicInfrastructure.Identity.Policies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Microsoft.Extensions.Configuration;
+
+using Microsoft.EntityFrameworkCore;
+using MechanicApplication.Common.Interfaces;
+using MechanicInfrastructure.Data;
+
+
 
 
 namespace Microsoft.Extensions.DependencyInjection;
@@ -16,7 +24,18 @@ public static class DependecyInjection
         IConfiguration configuration)
     {
         #region  Add Database Context
+        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        ArgumentException.ThrowIfNullOrEmpty(connectionString, "Connection string 'DefaultConnection' not found.");
 
+        services.AddScoped<ISaveChangesInterceptor, AuditableEntityInterceptor>();
+        services.AddDbContext<AppDbContext>((sp, options) =>
+        {
+            options.AddInterceptors(sp.GetServices<ISaveChangesInterceptor>());
+            options.UseSqlServer(connectionString);
+        });
+        services.AddScoped<IAppDbContext>(provider => provider.GetRequiredService<AppDbContext>());
+
+        services.AddScoped<ApplicationDbContextInitialiser>(); 
         #endregion
         // Add infrastructure services here (e.g., database context, repositories, etc.)
         #region Identity 

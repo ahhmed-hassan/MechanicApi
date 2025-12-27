@@ -13,6 +13,7 @@ using MechanicApplication.Common.Interfaces;
 using MechanicInfrastructure.Data;
 using MechanicInfrastructure.Identity;
 using Microsoft.AspNetCore.Identity;
+using MechanicInfrastructure.Services;
 
 
 
@@ -85,7 +86,7 @@ public static class DependecyInjection
         //TODO : Token Provieder
 
         //TODO: WorkOrderPolicy
-
+        services.AddScoped<IWorkOrderPolicy, AvailabilityChecker>();
         //TODO: Notification Service
 
         //TODO: IWorkOrderNotifier

@@ -2,7 +2,6 @@
 using ErrorOr;
 using MechanicApplication.Common.Errors;
 using MechanicApplication.Common.Interfaces;
-using MechanicApplication.Features.WorkOrders.Services;
 using MechanicDomain.Abstractions;
 using MechanicDomain.WorkOrders.Events;
 using MediatR;
@@ -16,7 +15,6 @@ namespace MechanicApplication.Features.WorkOrders.Commands.RelocateWorkOrder
         IAppDbContext context, 
         ILogger<RelocateWorkOrderCommandHandler> logger, 
         IWorkOrderPolicy workOrderPolicy, 
-        AvailabilityChecker availabilityChecker,
         HybridCache cache
 
         ) : IRequestHandler<RelocateWorkOrderCommand, ErrorOr<Updated>>
@@ -24,9 +22,8 @@ namespace MechanicApplication.Features.WorkOrders.Commands.RelocateWorkOrder
     {
         private readonly IAppDbContext _context = context;
         private readonly ILogger<RelocateWorkOrderCommandHandler> _logger = logger;
-        private readonly IWorkOrderPolicy _timeValidator = workOrderPolicy;
         private readonly HybridCache _cache = cache;
-        private readonly AvailabilityChecker _availabilityChecker = availabilityChecker;    
+        private readonly IWorkOrderPolicy _availabilityChecker = workOrderPolicy;    
         public async Task<ErrorOr<Updated>> Handle(RelocateWorkOrderCommand request, CancellationToken cancellationToken)
         {
             var workOrder = await _context.WorkOrders

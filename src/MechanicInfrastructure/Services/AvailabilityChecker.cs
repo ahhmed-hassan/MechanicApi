@@ -5,9 +5,9 @@ using MechanicApplication.Common.Interfaces;
 using MechanicDomain.WorkOrders.Enums;
 using Microsoft.EntityFrameworkCore;
 
-namespace MechanicApplication.Features.WorkOrders.Services;
+namespace MechanicInfrastructure.Services;
 
-public class AvailabilityChecker(IAppDbContext context)
+public class AvailabilityChecker(IAppDbContext context) : IWorkOrderPolicy
 {
     private readonly IAppDbContext _context = context;
     public async Task<bool> IsLaborOccupied(Guid laborId, Guid excludeWorkOrderOrderId, DateTimeOffset startAt, DateTimeOffset endAt)
@@ -49,5 +49,15 @@ public class AvailabilityChecker(IAppDbContext context)
                 startAt < wo.EndAtUtc &&
                 endAt > wo.StartAtUtc
             );
+    }
+
+    public bool IsOutsideOperatingHours(DateTimeOffset startAt, TimeSpan duration)
+    {
+        throw new NotImplementedException();
+    }
+
+    public ErrorOr<Success> ValidateMinimumRequirement(DateTimeOffset startAt, DateTimeOffset endAt)
+    {
+        throw new NotImplementedException();
     }
 }

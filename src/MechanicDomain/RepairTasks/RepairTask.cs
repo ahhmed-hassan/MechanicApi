@@ -13,7 +13,7 @@ public sealed class RepairTask : AuditableEntity
     public RepairDurationInMinutes EstimatedDurationInMins { get; private set; }
 
 
-    public List<Part> Parts { get; }
+    public List<Part> Parts { get; } = new();
     public decimal TotalCost => LaborCost + Parts.Sum(p => p.Cost * p.Quantity);
 
 #pragma warning disable CS8618
@@ -29,7 +29,7 @@ public sealed class RepairTask : AuditableEntity
         Name = name;
         LaborCost = laborCost;
         EstimatedDurationInMins = estimatedDurationInMins;
-        Parts = parts;
+        Parts = parts?? new();
     }
 
     public static ErrorOr<RepairTask> Create(Guid id, string name, decimal laborCost, RepairDurationInMinutes estimatedDurationInMins, List<Part> parts)

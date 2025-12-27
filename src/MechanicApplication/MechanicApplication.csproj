@@ -7,11 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Features\WorkOrders\Mappers\**" />
     <Compile Remove="Features\WorkOrders\Queries\**" />
-    <EmbeddedResource Remove="Features\WorkOrders\Mappers\**" />
     <EmbeddedResource Remove="Features\WorkOrders\Queries\**" />
-    <None Remove="Features\WorkOrders\Mappers\**" />
     <None Remove="Features\WorkOrders\Queries\**" />
   </ItemGroup>
 

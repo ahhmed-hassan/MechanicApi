@@ -10,7 +10,7 @@ namespace MechanicInfrastructure.Services;
 public class AvailabilityChecker(IAppDbContext context) : IWorkOrderPolicy
 {
     private readonly IAppDbContext _context = context;
-    public async Task<bool> IsLaborOccupied(Guid laborId, Guid excludeWorkOrderOrderId, DateTimeOffset startAt, DateTimeOffset endAt)
+    public async Task<bool> IsLaborOccupied(Guid laborId, Guid? excludeWorkOrderOrderId, DateTimeOffset startAt, DateTimeOffset endAt)
     {
         return await _context.WorkOrders
             .AnyAsync(wo =>

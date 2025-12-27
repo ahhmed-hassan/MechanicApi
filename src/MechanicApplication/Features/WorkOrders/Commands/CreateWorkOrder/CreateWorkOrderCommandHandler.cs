@@ -50,7 +50,18 @@ public sealed class CreateWorkOrderCommandHandler(
             .ToListAsync(cancellationToken);
         var endAt = request.StartAt.AddHours(repaitrTasks.Sum(rt => (double)rt.EstimatedDurationInMins));
 
-        var workOrderResult = WorkOrder.Create(
+        var isLaborOccupied = await _workOrderPolicy.IsLaborOccupied(
+            request.LaborId,
+            null,
+            request.StartAt,
+            endAt);
+        if (isLaborOccupied)
+        {
+            _logger.LogError("Labor with Id {LaborId} is occupied between {StartAt} and {EndAt}", request.LaborId, request.StartAt, endAt);
+            return ApplicationErrors.LaborOccupied;
+        }
+
+            var workOrderResult = WorkOrder.Create(
             Guid.NewGuid(),
             request.VehicleId,
             request.StartAt,
@@ -60,11 +71,7 @@ public sealed class CreateWorkOrderCommandHandler(
             endAt: endAt
         );
         return await workOrderResult
-           .Else(error =>
-           {
-               _logger.LogError("Failed to create Workorder {Error}", error.First().Description);
-               return error;
-           })
+        
            .ThenDoAsync(async workOrder =>
            {
                _appDbContext.WorkOrders.Add(workOrder);
@@ -75,7 +82,12 @@ public sealed class CreateWorkOrderCommandHandler(
            }
            )
            .ThenDo(workOrder=> { workOrder.Vehicle = vehicle;  })
-           .Then(WorkOrderMapper.ToDto);
+           .Then(WorkOrderMapper.ToDto)
+           .Else(error =>
+            {
+                _logger.LogError("Failed to create Workorder {Error}", error.First().Description);
+                return error;
+            })
             ;
 
        

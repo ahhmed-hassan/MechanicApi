@@ -9,7 +9,7 @@ public interface IWorkOrderPolicy
 {
     bool IsOutsideOperatingHours(DateTimeOffset startAt, TimeSpan duration);
 
-    Task<bool> IsLaborOccupied(Guid laborId, Guid excludedWorkOrderId, DateTimeOffset startAt, DateTimeOffset endAt);
+    Task<bool> IsLaborOccupied(Guid laborId, Guid? excludedWorkOrderId, DateTimeOffset startAt, DateTimeOffset endAt);
 
     Task<bool> IsVehicleAlreadyScheduled(Guid vehicleId, DateTimeOffset startAt, DateTimeOffset endAt, Guid? excludedWorkOrderId = null);
 

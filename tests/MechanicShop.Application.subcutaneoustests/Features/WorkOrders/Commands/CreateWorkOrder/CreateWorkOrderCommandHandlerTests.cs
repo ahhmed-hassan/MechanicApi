@@ -1,5 +1,6 @@
 ﻿using MechanicApi.Application.subcutaneoustests.Common;
 using MechanicApi.Controllers;
+using MechanicApplication.Common.Errors;
 using MechanicApplication.Common.Interfaces;
 using MechanicApplication.Features.WorkOrders.Commands.CreateWorkOrder;
 using MechanicDomain.RepairTasks.Enums;
@@ -242,7 +243,7 @@ public class CreateWorkOrderCommandHandlerTests(WebAppFactory factory)
         var result = await _mediator.Send(command2);
 
         Assert.True(result.IsError);
-        Assert.Equal("Labor_Occupied", result.FirstError.Code);
+        Assert.Equal(ApplicationErrors.LaborOccupied.Code, result.FirstError.Code);
     }
 
     [Fact]

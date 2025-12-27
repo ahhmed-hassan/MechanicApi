@@ -12,6 +12,8 @@ using Microsoft.EntityFrameworkCore;
 using MechanicApplication.Common.Interfaces;
 using MechanicInfrastructure.Data;
 using MechanicInfrastructure.Identity;
+using Microsoft.AspNetCore.Identity;
+using MechanicInfrastructure.Services;
 
 
 
@@ -42,10 +44,26 @@ public static class DependecyInjection
         #endregion
         // Add infrastructure services here (e.g., database context, repositories, etc.)
         #region Identity 
-        services.AddTransient<IIdenttiyService, IdentityService>(); 
+        services.AddTransient<IIdenttiyService, IdentityService>();
 
         #endregion
-        #region Authentication and Authorization
+
+        #region Authentication
+        services
+            .AddIdentityCore<AppUser>(options =>
+        {
+            options.Password.RequiredLength = 6;
+            options.Password.RequireDigit = false;
+            options.Password.RequireNonAlphanumeric = false;
+            options.Password.RequireUppercase = false;
+            options.Password.RequireLowercase = false;
+            options.Password.RequiredUniqueChars = 1;
+            options.SignIn.RequireConfirmedAccount = false;
+        })
+            .AddRoles<IdentityRole>()
+            .AddEntityFrameworkStores<AppDbContext>();
+        #endregion
+        #region Authorization and Policies 
         services.AddScoped<IAuthorizationHandler, LaborAssignedHandler>();
 
         services.AddAuthorizationBuilder()
@@ -59,16 +77,16 @@ public static class DependecyInjection
         #region Caching
         services.AddHybridCache(op => op.DefaultEntryOptions = new()
         {
-            Expiration = TimeSpan.FromMinutes(10), 
+            Expiration = TimeSpan.FromMinutes(10),
             LocalCacheExpiration = TimeSpan.FromMinutes(2)
         }
         );
         #endregion
 
         //TODO : Token Provieder
-
+        services.AddScoped<ITokenProvidere, TokenProvider>();
         //TODO: WorkOrderPolicy
-
+        services.AddScoped<IWorkOrderPolicy, AvailabilityChecker>();
         //TODO: Notification Service
 
         //TODO: IWorkOrderNotifier

@@ -84,7 +84,7 @@ public static class DependecyInjection
         #endregion
 
         //TODO : Token Provieder
-
+        services.AddScoped<ITokenProvidere, TokenProvider>();
         //TODO: WorkOrderPolicy
         services.AddScoped<IWorkOrderPolicy, AvailabilityChecker>();
         //TODO: Notification Service

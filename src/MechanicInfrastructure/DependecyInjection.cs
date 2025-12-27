@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using MechanicApplication.Common.Interfaces;
 using MechanicInfrastructure.Data;
+using MechanicInfrastructure.Identity;
 
 
 
@@ -20,10 +21,12 @@ namespace Microsoft.Extensions.DependencyInjection;
 
 public static class DependecyInjection
 {
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services,
+    public static IServiceCollection AddInfrastructure(
+        this IServiceCollection services,
         IConfiguration configuration)
     {
         #region  Add Database Context
+        services.AddSingleton(TimeProvider.System);
         var connectionString = configuration.GetConnectionString("DefaultConnection");
         ArgumentException.ThrowIfNullOrEmpty(connectionString, "Connection string 'DefaultConnection' not found.");
 
@@ -35,10 +38,11 @@ public static class DependecyInjection
         });
         services.AddScoped<IAppDbContext>(provider => provider.GetRequiredService<AppDbContext>());
 
-        services.AddScoped<ApplicationDbContextInitialiser>(); 
+        services.AddScoped<ApplicationDbContextInitialiser>();
         #endregion
         // Add infrastructure services here (e.g., database context, repositories, etc.)
         #region Identity 
+        services.AddTransient<IIdenttiyService, IdentityService>(); 
 
         #endregion
         #region Authentication and Authorization
@@ -53,7 +57,12 @@ public static class DependecyInjection
         #endregion
 
         #region Caching
-
+        services.AddHybridCache(op => op.DefaultEntryOptions = new()
+        {
+            Expiration = TimeSpan.FromMinutes(10), 
+            LocalCacheExpiration = TimeSpan.FromMinutes(2)
+        }
+        );
         #endregion
 
         //TODO : Token Provieder

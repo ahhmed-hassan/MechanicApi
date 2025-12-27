@@ -6,7 +6,6 @@ using System.Diagnostics;
 namespace MechanicApplication.Common.Behaviors;
 
 public class PerformanceBehaviour<TRequest, TResponse>(
-    Stopwatch stopwatch, 
     ILogger<TRequest> logger, 
     IUser user, 
     IIdenttiyService identtiyService)
@@ -14,7 +13,7 @@ public class PerformanceBehaviour<TRequest, TResponse>(
     where TRequest : IRequest<TResponse>
     where TResponse : notnull
 {
-    private readonly Stopwatch _stopwatch = stopwatch;
+    private readonly Stopwatch _stopwatch = new();
     private readonly ILogger<TRequest> _logger = logger;
     private readonly IUser _user = user;
     private readonly IIdenttiyService _identtiyService = identtiyService;

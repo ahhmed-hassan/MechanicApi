@@ -16,13 +16,15 @@ using Xunit;
 namespace MechanicApi.Application.subcutaneoustests.Features.WorkOrders.Commands.CreateWorkOrder;
 [Collection(WebbAppFactoryColllection.CollectionName)]
 public class CreateWorkOrderCommandHandlerTests(WebAppFactory factory)
+    :IntegrationTestBase(factory)
 {
-    private readonly IMediator _mediator = factory.Mediator;
-    private readonly IAppDbContext _dbContext = factory.DbContext;
+    //private readonly IMediator _mediator = factory.Mediator;
+    //private readonly IAppDbContext _dbContext = factory.DbContext;
 
     [Fact]
     public async Task Handle_GivenValidRequest_ShouldCreateWorkORder()
     {
+        Assert.True(IsEmptyDatabase());
         //Arrange 
         var customer = CustomerFactory.CreateCustomer().Value;
         var vehicle = customer.Vehicles.First();
@@ -62,6 +64,7 @@ public class CreateWorkOrderCommandHandlerTests(WebAppFactory factory)
     [Fact]
     public async Task Handle_WithMissingRepairTask_ShouldFail()
     {
+        Assert.True(IsEmptyDatabase());
         // Arrange
         var customer = CustomerFactory.CreateCustomer().Value;
         var vehicle = customer.Vehicles.First();
@@ -95,10 +98,12 @@ public class CreateWorkOrderCommandHandlerTests(WebAppFactory factory)
     [Fact]
     public async Task Handle_WithOutsideOperatingHours_ShouldFail()
     {
+        Assert.True(IsEmptyDatabase());
         var customer = CustomerFactory.CreateCustomer().Value;
         var vehicle = customer.Vehicles.First();
         var repairTask = RepairTaskFactory.CreateRepairTask(repairDurationInMinutes: RepairDurationInMinutes.Min60).Value;
         var employee = EmployeeFactory.CreateEmployee().Value;
+
 
         await _dbContext.Customers.AddAsync(customer);
         await _dbContext.Vehicles.AddAsync(vehicle);
@@ -144,6 +149,7 @@ public class CreateWorkOrderCommandHandlerTests(WebAppFactory factory)
     [Fact]
     public async Task Handle_WithMissingVehicle_ShouldFail()
     {
+        Assert.True(IsEmptyDatabase());
         var repairTask = RepairTaskFactory.CreateRepairTask(repairDurationInMinutes: RepairDurationInMinutes.Min60).Value;
         var employee = EmployeeFactory.CreateEmployee().Value;
 
@@ -186,6 +192,7 @@ public class CreateWorkOrderCommandHandlerTests(WebAppFactory factory)
     [Fact]
     public async Task Handle_WithVehicleConflict_ShouldFail()
     {
+        Assert.True(IsEmptyDatabase());
         var customer = CustomerFactory.CreateCustomer().Value;
         var vehicle = customer.Vehicles.First();
         var repairTask = RepairTaskFactory.CreateRepairTask(repairDurationInMinutes: RepairDurationInMinutes.Min60).Value;
@@ -216,6 +223,7 @@ public class CreateWorkOrderCommandHandlerTests(WebAppFactory factory)
     [Fact]
     public async Task Handle_WithLaborConflict_ShouldFail()
     {
+        Assert.True(IsEmptyDatabase());
         var customer1 = CustomerFactory.CreateCustomer().Value;
         var vehicle1 = customer1.Vehicles.First();
         var customer2 = CustomerFactory.CreateCustomer().Value;
@@ -249,6 +257,7 @@ public class CreateWorkOrderCommandHandlerTests(WebAppFactory factory)
     [Fact]
     public async Task Handle_WithUnavailableSpot_ShouldFail()
     {
+        Assert.True(IsEmptyDatabase());
         var vehicle1 = VehicleFactory.CreateVehicle().Value;
         var vehicle2 = VehicleFactory.CreateVehicle().Value;
 

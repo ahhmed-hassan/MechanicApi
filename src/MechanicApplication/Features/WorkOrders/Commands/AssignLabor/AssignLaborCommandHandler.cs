@@ -1,7 +1,7 @@
 ﻿using ErrorOr;
 using MechanicApplication.Common.Errors;
 using MechanicApplication.Common.Interfaces;
-using MechanicApplication.Features.WorkOrders.Services;
+using MechanicApplication.Features.WorkOrders;
 using MediatR;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
@@ -11,14 +11,14 @@ namespace MechanicApplication.Features.WorkOrders.Commands.AssignLabor;
 public sealed class AssignLaborCommandHandler(
     ILogger<AssignLaborCommandHandler> logger,
     IAppDbContext context,
-    AvailabilityChecker availabilityChecker, 
+    IWorkOrderPolicy availabilityChecker, 
     HybridCache cache
 
     ) : IRequestHandler<AssignLaborCommand, ErrorOr<Updated>>
 {
     private readonly ILogger<AssignLaborCommandHandler> _logger = logger; 
     private readonly IAppDbContext _appDbContext = context;
-    private readonly AvailabilityChecker _availabilityChecker = availabilityChecker;
+    private readonly IWorkOrderPolicy _availabilityChecker = availabilityChecker;
     private readonly HybridCache _cache = cache;
     public async Task<ErrorOr<Updated>> Handle(AssignLaborCommand request, CancellationToken cancellationToken)
     {

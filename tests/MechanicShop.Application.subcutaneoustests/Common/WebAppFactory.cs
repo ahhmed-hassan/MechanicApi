@@ -40,7 +40,15 @@ public class WebAppFactory : WebApplicationFactory<AssemblyMarker>, IAsyncLifeti
               using var scope = Services.CreateScope();
               var context = scope.ServiceProvider.GetRequiredService<IAppDbContext>();
 
-              context.WorkOrders.RemoveRange(context.WorkOrders);
+              //await context.WorkOrders.ExecuteDeleteAsync();
+              //await context.RepairTasks.ExecuteDeleteAsync();
+              //await context.Vehicles.ExecuteDeleteAsync();
+              //await context.Employees.ExecuteDeleteAsync();
+              //await context.Customers.ExecuteDeleteAsync();
+              //await context.Parts.ExecuteDeleteAsync();
+              //await context.Invoices.ExecuteDeleteAsync();
+              //await context.RefreshTokens.ExecuteDeleteAsync();
+
               await context.SaveChangesAsync(default);
           }).Unwrap();
     }

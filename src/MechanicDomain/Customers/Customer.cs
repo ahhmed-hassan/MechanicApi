@@ -54,7 +54,7 @@ namespace MechanicDomain.Customers;
         }
     public static ErrorOr<Customer> Create(Guid id, string name, string phoneNumber, string email, List<Vehicle> vehicles)
     {
-        return GetIdIfValid(id, name, email, phoneNumber).Then(id =>
+        return GetIdIfValid(id, name, phoneNumber, email).Then(id =>
         new Customer(id, name, phoneNumber, email, vehicles)); 
     }
 

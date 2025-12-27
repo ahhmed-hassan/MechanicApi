@@ -61,7 +61,12 @@ public sealed class CreateWorkOrderCommandHandler(
             return ApplicationErrors.LaborOccupied;
         }
 
-            var workOrderResult = WorkOrder.Create(
+        var isSpotAvailable = await _workOrderPolicy.CheckSpotAvailabilityAsync(request.Spot, request.StartAt, endAt,
+            null, cancellationToken);
+
+            var workOrderResult = isSpotAvailable
+            .Then(_ =>
+            WorkOrder.Create(
             Guid.NewGuid(),
             request.VehicleId,
             request.StartAt,
@@ -69,7 +74,7 @@ public sealed class CreateWorkOrderCommandHandler(
             spot: request.Spot,
             repairTasks: repaitrTasks,
             endAt: endAt
-        );
+        ));
         return await workOrderResult
         
            .ThenDoAsync(async workOrder =>

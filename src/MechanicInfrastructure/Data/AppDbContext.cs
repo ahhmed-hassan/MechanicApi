@@ -50,6 +50,7 @@ public class AppDbContext
     {
         base.OnModelCreating(builder);
         builder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+        builder.Ignore<DomainEvent>(); 
     }
 
     private async Task DispatchDomainEventsAsync(CancellationToken ct)

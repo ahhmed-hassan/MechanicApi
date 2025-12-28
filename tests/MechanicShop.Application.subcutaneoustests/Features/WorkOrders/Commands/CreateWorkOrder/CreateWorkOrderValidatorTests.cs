@@ -27,4 +27,24 @@ public class CreateWorkOrderValidatorTests
         Assert.Contains(result.Errors, e => e.PropertyName == nameof(CreateWorkOrderCommand.VehicleId) &&
                                            e.ErrorMessage.Contains("VehicleId must not be empty"));
     }
+
+    [Fact]
+    public void Validate_ShouldReturnError_WhenStartAtIsInThePast()
+    {
+        // Arrange
+        var command = new CreateWorkOrderCommand(
+          Spot: Spot.A,
+          VehicleId: Guid.NewGuid(),
+          StartAt: DateTime.UtcNow.AddHours(-1),
+          RepairTasksIds: [Guid.NewGuid()],
+          LaborId: Guid.NewGuid()
+          );
+        // Act
+        var result = _validator.Validate(command);
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.PropertyName == nameof(CreateWorkOrderCommand.StartAt)
+                                           &&  e.ErrorMessage.Contains("StartAt must be in the future")
+                                           );
+    }
 }

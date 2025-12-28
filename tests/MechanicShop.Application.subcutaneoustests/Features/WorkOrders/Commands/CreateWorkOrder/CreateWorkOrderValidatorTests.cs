@@ -67,4 +67,42 @@ public class CreateWorkOrderValidatorTests
                                            && e.ErrorMessage.Contains("RepairTasksIds must contain at least one item")
                                            );
     }
+
+    [Fact]
+    public void Validate_ShouldReturnError_WhenLaborIdIsEmpty()
+    {
+        // Arrange
+        var command = new CreateWorkOrderCommand(
+          Spot: Spot.A,
+          VehicleId: Guid.NewGuid(),
+          StartAt: DateTime.UtcNow.AddHours(1),
+          RepairTasksIds: [Guid.NewGuid()],
+          LaborId: Guid.Empty
+          );
+        // Act
+        var result = _validator.Validate(command);
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.PropertyName == nameof(CreateWorkOrderCommand.LaborId)
+                                           && e.ErrorMessage.Contains("LaborId must not be empty")
+                                           );
+    }
+
+    [Fact]
+    public void Validate_ShouldBeValid_WhenAllPropertiesAreValid()
+    {
+        // Arrange
+        var command = new CreateWorkOrderCommand(
+          Spot: Spot.A,
+          VehicleId: Guid.NewGuid(),
+          StartAt: DateTime.UtcNow.AddHours(1),
+          RepairTasksIds: [Guid.NewGuid()],
+          LaborId: Guid.NewGuid()
+          );
+        // Act
+        var result = _validator.Validate(command);
+        // Assert
+        Assert.True(result.IsValid);
+        Assert.Empty(result.Errors);
+    }
 }

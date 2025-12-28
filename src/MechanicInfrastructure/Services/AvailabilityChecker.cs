@@ -3,13 +3,19 @@ using ErrorOr;
 using MechanicApplication.Common.Errors;
 using MechanicApplication.Common.Interfaces;
 using MechanicDomain.WorkOrders.Enums;
+using MechanicInfrastructure.Settings;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace MechanicInfrastructure.Services;
 
-public class AvailabilityChecker(IAppDbContext context) : IWorkOrderPolicy
+public class AvailabilityChecker(
+    IAppDbContext context, 
+    IOptions<AppSettings> appSettings
+    ) : IWorkOrderPolicy
 {
     private readonly IAppDbContext _context = context;
+    private readonly AppSettings _appSettings = appSettings.Value;
     public async Task<bool> IsLaborOccupied(Guid laborId, Guid excludeWorkOrderOrderId, DateTimeOffset startAt, DateTimeOffset endAt)
     {
         return await _context.WorkOrders
@@ -51,13 +57,21 @@ public class AvailabilityChecker(IAppDbContext context) : IWorkOrderPolicy
             );
     }
 
-    public bool IsOutsideOperatingHours(DateTimeOffset startAt, TimeSpan duration)
+    public bool IsOutsideOperatingHours(DateTimeOffset startAt, DateTimeOffset endAt)
     {
-        throw new NotImplementedException();
+        var dateOfTheDay = startAt.Date;
+        var opening = dateOfTheDay.Add(_appSettings.OpeningTime.ToTimeSpan());
+        var closing = dateOfTheDay.Add(_appSettings.ClosingTime.ToTimeSpan());
+        return startAt < opening || endAt > closing;
     }
-
     public ErrorOr<Success> ValidateMinimumRequirement(DateTimeOffset startAt, DateTimeOffset endAt)
     {
-        throw new NotImplementedException();
+        if (endAt - startAt < TimeSpan.FromMinutes(_appSettings.MinimumAppointmentDurationInMinutes))
+            return Error.Validation(
+                "WorkOrder_TooShort",
+                $"WorkOrder duration must be at least {_appSettings.MinimumAppointmentDurationInMinutes} minutes."
+                );
+        else
+            return new ErrorOr.Success(); 
     }
 }

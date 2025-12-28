@@ -50,6 +50,13 @@ public sealed class CreateWorkOrderCommandHandler(
             .ToListAsync(cancellationToken);
         var endAt = request.StartAt.AddMinutes(repaitrTasks.Sum(rt => (double)rt.EstimatedDurationInMins));
 
+        if (_workOrderPolicy.IsOutsideOperatingHours(request.StartAt, endAt))
+        {
+            _logger.LogError("WorkOrder time {StartAt} to {EndAt} is outside operating hours", request.StartAt, endAt);
+            return ApplicationErrors.WorkOrderOutsideOperatingHour(request.StartAt, endAt);
+        }
+
+
         var isLaborOccupied = await _workOrderPolicy.IsLaborOccupied(
             request.LaborId,
             null,
@@ -71,19 +78,19 @@ public sealed class CreateWorkOrderCommandHandler(
                  null, cancellationToken)
             );
 
-            var workOrderResult = isSpotAvailable
-            .Then(_ =>
-            WorkOrder.Create(
-            Guid.NewGuid(),
-            request.VehicleId,
-            request.StartAt,
-            laborId: request.LaborId,
-            spot: request.Spot,
-            repairTasks: repaitrTasks,
-            endAt: endAt
-        ));
+        var workOrderResult = isSpotAvailable
+        .Then(_ =>
+        WorkOrder.Create(
+        Guid.NewGuid(),
+        request.VehicleId,
+        request.StartAt,
+        laborId: request.LaborId,
+        spot: request.Spot,
+        repairTasks: repaitrTasks,
+        endAt: endAt
+    ));
         return await workOrderResult
-        
+
            .ThenDoAsync(async workOrder =>
            {
                _appDbContext.WorkOrders.Add(workOrder);
@@ -93,7 +100,7 @@ public sealed class CreateWorkOrderCommandHandler(
                await _cache.RemoveByTagAsync(Constants.Cache.WorkOrders.Single, cancellationToken);
            }
            )
-           .ThenDo(workOrder=> { workOrder.Vehicle = vehicle;  })
+           .ThenDo(workOrder => { workOrder.Vehicle = vehicle; })
            .Then(WorkOrderMapper.ToDto)
            .Else(error =>
             {
@@ -102,6 +109,6 @@ public sealed class CreateWorkOrderCommandHandler(
             })
             ;
 
-       
+
     }
 }

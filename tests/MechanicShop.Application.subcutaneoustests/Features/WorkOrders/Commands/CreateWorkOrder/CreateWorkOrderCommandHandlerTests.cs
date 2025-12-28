@@ -37,7 +37,7 @@ public class CreateWorkOrderCommandHandlerTests(WebAppFactory factory)
         await _dbContext.Vehicles.AddAsync(vehicle);
         await _dbContext.SaveChangesAsync(CancellationToken.None);
 
-        var scheduledAt = DateTimeOffset.UtcNow.AddDays(3).AddHours(10);
+        var scheduledAt = DateTimeOffset.UtcNow.Date.AddDays(3).AddHours(10);
 
         var command = new MechanicApplication.Features.WorkOrders.Commands.CreateWorkOrder.CreateWorkOrderCommand(
             Spot : Spot.B, 
@@ -119,6 +119,9 @@ public class CreateWorkOrderCommandHandlerTests(WebAppFactory factory)
         var result = await _mediator.Send(command);
 
         Assert.True(result.IsError);
+        //We are interested in the error code itself here not the specific errr message resulted from it. 
+        Assert.Contains(result.Errors,
+            e => e.Code == ApplicationErrors.WorkOrderOutsideOperatingHour(DateTimeOffset.MinValue, DateTimeOffset.MinValue).Code);
     }
 
     [Fact]

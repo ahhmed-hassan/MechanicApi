@@ -7,7 +7,7 @@ namespace MechanicApplication.Common.Interfaces;
 
 public interface IWorkOrderPolicy
 {
-    bool IsOutsideOperatingHours(DateTimeOffset startAt, TimeSpan duration);
+    bool IsOutsideOperatingHours(DateTimeOffset startAt, DateTimeOffset endAt);
 
     Task<bool> IsLaborOccupied(Guid laborId, Guid? excludedWorkOrderId, DateTimeOffset startAt, DateTimeOffset endAt);
 

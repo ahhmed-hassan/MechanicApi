@@ -48,7 +48,7 @@ public sealed class CreateWorkOrderCommandHandler(
         var repaitrTasks = await _appDbContext.RepairTasks
             .Where(rt => request.RepairTasksIds.Contains(rt.Id))
             .ToListAsync(cancellationToken);
-        var endAt = request.StartAt.AddHours(repaitrTasks.Sum(rt => (double)rt.EstimatedDurationInMins));
+        var endAt = request.StartAt.AddMinutes(repaitrTasks.Sum(rt => (double)rt.EstimatedDurationInMins));
 
         var isLaborOccupied = await _workOrderPolicy.IsLaborOccupied(
             request.LaborId,
@@ -61,8 +61,15 @@ public sealed class CreateWorkOrderCommandHandler(
             return ApplicationErrors.LaborOccupied;
         }
 
-        var isSpotAvailable = await _workOrderPolicy.CheckSpotAvailabilityAsync(request.Spot, request.StartAt, endAt,
-            null, cancellationToken);
+        ErrorOr<Success> fullfillMinumumDuration =
+            _workOrderPolicy.ValidateMinimumRequirement(request.StartAt, endAt);
+
+        var isSpotAvailable = await
+            fullfillMinumumDuration
+            .ThenAsync(_ =>
+                _workOrderPolicy.CheckSpotAvailabilityAsync(request.Spot, request.StartAt, endAt,
+                 null, cancellationToken)
+            );
 
             var workOrderResult = isSpotAvailable
             .Then(_ =>

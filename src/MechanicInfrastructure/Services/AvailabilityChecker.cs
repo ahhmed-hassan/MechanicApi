@@ -16,7 +16,7 @@ public class AvailabilityChecker(
 {
     private readonly IAppDbContext _context = context;
     private readonly AppSettings _appSettings = appSettings.Value;
-    public async Task<bool> IsLaborOccupied(Guid laborId, Guid excludeWorkOrderOrderId, DateTimeOffset startAt, DateTimeOffset endAt)
+    public async Task<bool> IsLaborOccupied(Guid laborId, Guid? excludeWorkOrderOrderId, DateTimeOffset startAt, DateTimeOffset endAt)
     {
         return await _context.WorkOrders
             .AnyAsync(wo =>
@@ -66,7 +66,9 @@ public class AvailabilityChecker(
     }
     public ErrorOr<Success> ValidateMinimumRequirement(DateTimeOffset startAt, DateTimeOffset endAt)
     {
-        if (endAt - startAt < TimeSpan.FromMinutes(_appSettings.MinimumAppointmentDurationInMinutes))
+        if ((endAt - startAt)
+            < TimeSpan.FromMinutes(_appSettings.MinimumAppointmentDurationInMinutes)
+            )
             return Error.Validation(
                 "WorkOrder_TooShort",
                 $"WorkOrder duration must be at least {_appSettings.MinimumAppointmentDurationInMinutes} minutes."

@@ -2,6 +2,7 @@
 using MechanicApi.Infrastructure;
 using MechanicApi.Services;
 using MechanicApplication.Common.Interfaces;
+using MechanicInfrastructure.Settings;
 using Microsoft.AspNetCore.RateLimiting;
 using Serilog;
 using System.Text.Json.Serialization;
@@ -15,6 +16,7 @@ public static class DependencyInjection
         this IServiceCollection services
         , IConfiguration configuration) =>
         services
+        .Configure<AppSettings>(configuration.GetSection("AppSettings"))
             .AddControllerWithJsonConfiguration()
             .AddCustomApiVersioning()
             .AddAppOutpurCaching()

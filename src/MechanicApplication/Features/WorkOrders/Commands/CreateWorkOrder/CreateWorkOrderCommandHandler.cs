@@ -12,6 +12,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Hybrid;
 using Microsoft.Extensions.Logging;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace MechanicApplication.Features.WorkOrders.Commands.CreateWorkOrder;
 
@@ -56,6 +57,22 @@ public sealed class CreateWorkOrderCommandHandler(
             return ApplicationErrors.WorkOrderOutsideOperatingHour(request.StartAt, endAt);
         }
 
+        //Vechicle can belong to many workOrders, but of course only one of them at any specific time
+        var theSameVehicleIsAssignedToSomeWorkOrderAtOverlappingTime = await _appDbContext.WorkOrders
+            .AnyAsync(wo =>
+            wo.VehicleId == request.VehicleId &&
+            wo.StartAtUtc < endAt &&
+            wo.EndAtUtc > request.StartAt
+            , cancellationToken
+            );
+
+        if(theSameVehicleIsAssignedToSomeWorkOrderAtOverlappingTime)
+        {
+            _logger.LogError("Vehicle with Id '{VehicleId}' already has an overlapping WorkOrder.", request.VehicleId);
+            return Error.Conflict(
+               code: "Vehicle_Overlapping_WorkOrders",
+               description: "The vehicle already has an overlapping WorkOrder for the given start and end UTC time.");
+        }
 
         var isLaborOccupied = await _workOrderPolicy.IsLaborOccupied(
             request.LaborId,

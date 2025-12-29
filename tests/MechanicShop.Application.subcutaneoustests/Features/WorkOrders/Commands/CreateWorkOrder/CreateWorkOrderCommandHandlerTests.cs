@@ -8,6 +8,7 @@ using MechanicDomain.WorkOrders.Enums;
 using MechanicShop.Tests.Common.Customers;
 using MechanicShop.Tests.Common.Employees;
 using MechanicShop.Tests.Common.RepaireTasks;
+using MechanicShop.Tests.Common.WorkOrders;
 using MediatR;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -201,22 +202,25 @@ public class CreateWorkOrderCommandHandlerTests(WebAppFactory factory)
         var repairTask = RepairTaskFactory.CreateRepairTask(repairDurationInMinutes: RepairDurationInMinutes.Min60).Value;
         var employee1 = EmployeeFactory.CreateEmployee().Value;
         var employee2 = EmployeeFactory.CreateEmployee().Value;
+        
 
         await _dbContext.Customers.AddAsync(customer);
         await _dbContext.Vehicles.AddAsync(vehicle);
         await _dbContext.RepairTasks.AddAsync(repairTask);
         await _dbContext.Employees.AddAsync(employee1);
         await _dbContext.Employees.AddAsync(employee2);
-        await _dbContext.SaveChangesAsync(default);
 
         var scheduledAt = DateTimeOffset.UtcNow.Date
            .AddDays(1)
            .AddHours(15);
+        var endAt = scheduledAt.AddMinutes((int)repairTask.EstimatedDurationInMins);
 
-        var command1 = new CreateWorkOrderCommand(Spot.A, vehicle.Id, scheduledAt, [repairTask.Id], employee1.Id);
+        var alreadyExistingWorkOrder = WorkOrderFactory.CreateWorkOrder(Guid.NewGuid(), vehicle.Id, scheduledAt, endAt, employee1.Id);
+        await _dbContext.WorkOrders.AddAsync(alreadyExistingWorkOrder.Value);
+        await _dbContext.SaveChangesAsync(default);
+
         var command2 = new CreateWorkOrderCommand(Spot.B, vehicle.Id, scheduledAt, [repairTask.Id], employee2.Id);
 
-        await _mediator.Send(command1);
         var result = await _mediator.Send(command2);
 
         Assert.True(result.IsError);

@@ -12,7 +12,7 @@ public sealed class WorkOrder : AuditableEntity
 {
     public Guid VehicleId { get; }
     public DateTimeOffset StartAtUtc { get; private set; }
-    public DateTimeOffset EndAtUtc { get; private set; }
+    //public DateTimeOffset EndAtUtc { get; private set; }
     public Guid LaborId { get; private set; }
     public Spot Spot { get; private set; }
     public WorkOrderState State { get; private set; }
@@ -29,7 +29,7 @@ public sealed class WorkOrder : AuditableEntity
     public TimeSpan EstimatedDuration => TimeSpan.FromMinutes(
         _repairTasks.Sum(rt => (int) rt.EstimatedDurationInMins));
 
-    public DateTimeOffset EstimatedEndUtc => StartAtUtc + EstimatedDuration;
+    public DateTimeOffset EndAtUtc => StartAtUtc + EstimatedDuration;
     private readonly List<RepairTask> _repairTasks = [];
     public IEnumerable<RepairTask> RepairTasks => _repairTasks.AsReadOnly();
 
@@ -42,7 +42,6 @@ public sealed class WorkOrder : AuditableEntity
     {
         VehicleId = vehicleId;
         StartAtUtc = startAt;
-        EndAtUtc = endAt;
         LaborId = laborId;
         Spot = spot;
         State = state;
@@ -79,16 +78,15 @@ public sealed class WorkOrder : AuditableEntity
         return Result.Updated;
     }
 
-    public ErrorOr<Updated> UpdateTiming(DateTimeOffset startAt, DateTimeOffset endAt)
+    public ErrorOr<Updated> UpdateTiming(DateTimeOffset startAt/*, DateTimeOffset endAt*/)
     {
         if (!IsEditable)
             return WorkOrderErrors.TimingReadonly(Id.ToString(), State);
 
-        if (endAt <= startAt)
-            return WorkOrderErrors.InvalidTiming;
+        //if (endAt <= startAt)
+        //    return WorkOrderErrors.InvalidTiming;
 
         StartAtUtc = startAt;
-        EndAtUtc = endAt;
 
         return Result.Updated;
     }

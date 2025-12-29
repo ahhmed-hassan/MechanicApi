@@ -3,8 +3,10 @@ using ErrorOr;
 using MechanicApi.ContractDomainMapping;
 using MechanicApplication.Common.Constants;
 using MechanicApplication.Features.WorkOrders.Commands.AssignLabor;
+using MechanicApplication.Features.WorkOrders.Commands.CreateWorkOrder;
 using MechanicApplication.Features.WorkOrders.Commands.RelocateWorkOrder;
 using MechanicApplication.Features.WorkOrders.Commands.UpdateWorkOrderState;
+using MechanicApplication.Features.WorkOrders.Dtos;
 using MechanicContracts.Requests.WorkOrders;
 using MechanicContracts.Shared;
 using MechanicDomain.Identity;
@@ -21,6 +23,36 @@ namespace MechanicApi.Controllers
     [ApiVersion("1.0")]
     public class WorkOrderController(ISender sender) : ApiBaseController
     {
+
+        [HttpPost]
+        [Authorize(Policy = nameof(Role.Manager))]
+        [ProducesResponseType<WorkOrderDTO>(StatusCodes.Status201Created)]
+        [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType<ProblemDetails>(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
+        [EndpointSummary("Create a new work order")]
+        [EndpointDescription("Create a new work order by providing spot, vehicle ID, start time, repair tasks, and labor ID. Only managers can perform this action.")]
+        [EndpointName("CreateWorkOrder")]
+        public async Task<ActionResult<WorkOrderDTO>> Create([FromBody] CreateWorkOrderRequest request, CancellationToken cancellationToken)
+        {
+            var command = new CreateWorkOrderCommand(
+                request.Spot.ToDomainSpot(),
+                request.VehicleId,
+                request.StartAtUtc,
+                request.RepairTasksIds,
+                request.LaborId
+                );
+            var result = await sender.Send(command, cancellationToken);
+            var currentApiVersion = HttpContext.GetRequestedApiVersion()?.ToString();
+            return result.Match( 
+                workOrder => CreatedAtAction(
+                    "GetWorkOrderById",
+                    new { workOrderId = workOrder.WorkOrderId, apiVersion = currentApiVersion },
+                    workOrder
+                    ),
+                Problem);
+        }
+
         [HttpPost("{workOrderId:guid}/relocate")]
         [ProducesResponseType<NoContentResult>(StatusCodes.Status204NoContent)]
         [ProducesResponseType<ProblemDetails>(StatusCodes.Status400BadRequest)]

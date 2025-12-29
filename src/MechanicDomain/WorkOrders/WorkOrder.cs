@@ -25,6 +25,11 @@ public sealed class WorkOrder : AuditableEntity
     public decimal TotalLaborCost => _repairTasks.Sum(rt => rt.LaborCost);
     public decimal Total => TotalPartsCost  + TotalLaborCost ;
 
+
+    public TimeSpan EstimatedDuration => TimeSpan.FromMinutes(
+        _repairTasks.Sum(rt => (int) rt.EstimatedDurationInMins));
+
+    public DateTimeOffset EstimatedEndUtc => StartAtUtc + EstimatedDuration;
     private readonly List<RepairTask> _repairTasks = [];
     public IEnumerable<RepairTask> RepairTasks => _repairTasks.AsReadOnly();
 

@@ -1,5 +1,6 @@
 ﻿using Asp.Versioning;
 using ErrorOr;
+using MechanicApi.ContractDomainMapping;
 using MechanicApplication.Common.Constants;
 using MechanicApplication.Features.WorkOrders.Commands.AssignLabor;
 using MechanicApplication.Features.WorkOrders.Commands.RelocateWorkOrder;

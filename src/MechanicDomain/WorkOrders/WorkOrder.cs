@@ -21,12 +21,13 @@ public sealed class WorkOrder : AuditableEntity
     public Invoice? Invoice { get; set; }
     public decimal? Discount { get; private set; }
     public decimal? Tax { get; private set; }
-    public decimal? TotalPartsCost => _repairTasks.SelectMany(rt => rt.Parts).Sum(p => p.Cost);
-    public decimal? TotalLaborCost => _repairTasks.Sum(rt => rt.LaborCost);
-    public decimal? Total => (TotalPartsCost ?? 0) + (TotalLaborCost ?? 0);
+    public decimal TotalPartsCost => _repairTasks.SelectMany(rt => rt.Parts).Sum(p => p.Cost);
+    public decimal TotalLaborCost => _repairTasks.Sum(rt => rt.LaborCost);
+    public decimal Total => TotalPartsCost  + TotalLaborCost ;
 
     private readonly List<RepairTask> _repairTasks = [];
     public IEnumerable<RepairTask> RepairTasks => _repairTasks.AsReadOnly();
+
 
     private WorkOrder()
     { }
@@ -40,7 +41,7 @@ public sealed class WorkOrder : AuditableEntity
         LaborId = laborId;
         Spot = spot;
         State = state;
-        _repairTasks = repairTasks;
+        _repairTasks = repairTasks?? [];
     }
 
     public static ErrorOr<WorkOrder> Create(Guid id, Guid vehicleId, DateTimeOffset startAt, DateTimeOffset endAt, Guid laborId, Spot spot, List<RepairTask> repairTasks)
@@ -58,7 +59,7 @@ public sealed class WorkOrder : AuditableEntity
         if (!Enum.IsDefined(spot))
             return WorkOrderErrors.SpotInvalid;
 
-        return new WorkOrder(id, vehicleId, startAt, endAt, laborId, spot, WorkOrderState.Scheduled, repairTasks);
+        return new WorkOrder(id, vehicleId, startAt, endAt, laborId, spot, WorkOrderState.Scheduled, repairTasks?? []);
     }
     private bool IsEditable => State is not (WorkOrderState.Completed or WorkOrderState.Cancelled or WorkOrderState.InProgress);
     public ErrorOr<Updated> AddRepairTask(RepairTask repairTask)

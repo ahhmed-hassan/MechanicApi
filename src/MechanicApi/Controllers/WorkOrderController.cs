@@ -5,6 +5,7 @@ using MechanicApplication.Features.WorkOrders.Commands.AssignLabor;
 using MechanicApplication.Features.WorkOrders.Commands.RelocateWorkOrder;
 using MechanicApplication.Features.WorkOrders.Commands.UpdateWorkOrderState;
 using MechanicContracts.Requests.WorkOrders;
+using MechanicContracts.Shared;
 using MechanicDomain.Identity;
 using MechanicInfrastructure.Identity.Policies;
 using MediatR;
@@ -29,7 +30,7 @@ namespace MechanicApi.Controllers
 
         public async Task<ActionResult<NoContentResult>> Relocate(Guid workOrderId, RelocateWorkOrderRequest request, CancellationToken cancellationToken)
         {
-            var relocateCommand = new RelocateWorkOrderCommand(workOrderId, request.NewStart, request.newSpot);
+            var relocateCommand = new RelocateWorkOrderCommand(workOrderId, request.NewStart, request.newSpot.ToDomainSpot());
             var result = await sender.Send(relocateCommand, cancellationToken);
             return result.Match(_ => NoContent(), Problem);
 

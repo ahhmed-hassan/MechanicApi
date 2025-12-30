@@ -29,7 +29,11 @@ public sealed class WorkOrder : AuditableEntity
     public TimeSpan EstimatedDuration => TimeSpan.FromMinutes(
         _repairTasks.Sum(rt => (int) rt.EstimatedDurationInMins));
 
-    public DateTimeOffset EndAtUtc => StartAtUtc + EstimatedDuration;
+    public DateTimeOffset EndAtUtc {
+        get => StartAtUtc + EstimatedDuration;
+        //only for Ef Core so we can query on the sql server side with the EndAtUtc property
+        private set {}
+    }
     private readonly List<RepairTask> _repairTasks = [];
     public IEnumerable<RepairTask> RepairTasks => _repairTasks.AsReadOnly();
 

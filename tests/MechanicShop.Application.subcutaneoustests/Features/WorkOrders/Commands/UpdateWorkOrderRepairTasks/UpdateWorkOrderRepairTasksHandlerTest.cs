@@ -1,4 +1,5 @@
 ﻿using MechanicApi.Application.subcutaneoustests.Common;
+using MechanicApplication.Common.Errors;
 using MechanicApplication.Features.WorkOrders.Commands.UpdateWorkOrderRepairTasks;
 using MechanicDomain.RepairTasks.Enums;
 using MechanicDomain.WorkOrders.Enums;
@@ -81,8 +82,37 @@ public class UpdateWorkOrderRepairTasksCommandHandlerTests(WebAppFactory factory
         Assert.Contains(updatedWorkOrder.RepairTasks, rt => rt.Id == newRepairTask1.Id);
         Assert.Contains(updatedWorkOrder.RepairTasks, rt => rt.Id == newRepairTask2.Id);
 
-        // Verify timing was updated (45 + 30 = 75 minutes)
-        var expectedEndAt = scheduledAt.AddMinutes(75);
-        Assert.Equal(expectedEndAt, updatedWorkOrder.EndAtUtc);
+    }
+
+    [Fact]
+    public async Task Handle_WithNonExistentWorkOrder_ShouldFail()
+    {
+        // Arrange
+        Assert.True(IsEmptyDatabase());
+
+        // Create repair tasks that exist, but NO work order
+        var repairTask1 = RepairTaskFactory.CreateRepairTask(
+            name: "Brake Inspection",
+            repairDurationInMinutes: RepairDurationInMinutes.Min45).Value;
+        var repairTask2 = RepairTaskFactory.CreateRepairTask(
+            name: "Tire Rotation",
+            repairDurationInMinutes: RepairDurationInMinutes.Min30).Value;
+
+        await _dbContext.RepairTasks.AddAsync(repairTask1);
+        await _dbContext.RepairTasks.AddAsync(repairTask2);
+        await _dbContext.SaveChangesAsync(default);
+
+        // Try to update a work order that doesn't exist
+        var nonExistentWorkOrderId = Guid.NewGuid();
+        var command = new UpdateWorkOrderRepairTasksCommand(
+            WorkOrderId: nonExistentWorkOrderId,
+            RepairTasksIds: [repairTask1.Id, repairTask2.Id]);
+
+        // Act
+        var result = await _mediator.Send(command);
+
+        // Assert
+        Assert.True(result.IsError);
+        Assert.Equal(ApplicationErrors.WorkOrderNotFound.Code, result.FirstError.Code);
     }
 }

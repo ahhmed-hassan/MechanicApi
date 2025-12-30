@@ -1,10 +1,12 @@
 ﻿
 
 using ErrorOr;
+using MechanicApplication.Common.Errors;
 using MechanicApplication.Common.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace MechanicApplication.Features.WorkOrders.Commands.UpdateWorkOrderRepairTasks;
 
@@ -27,6 +29,12 @@ public sealed class UpdateWorkOrdersRepairTasksCommandHandler
             .Where(repairTask => request.RepairTasksIds.Contains(repairTask.Id))
             .ToListAsync(cancellationToken);
 
+        if(workOrder is null)
+        {
+            logger.LogError("WorkOrder with Id '{WorkOrderId}' does not exist.", request.WorkOrderId);
+
+            return ApplicationErrors.WorkOrderNotFound;
+        }
 
         var result = await requestedRepairTasks
         .Aggregate(

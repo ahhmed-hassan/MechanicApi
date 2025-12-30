@@ -12,7 +12,7 @@ public sealed class WorkOrder : AuditableEntity
 {
     public Guid VehicleId { get; }
     public DateTimeOffset StartAtUtc { get; private set; }
-    public DateTimeOffset EndAtUtc { get; private set; }
+    //public DateTimeOffset EndAtUtc { get; private set; }
     public Guid LaborId { get; private set; }
     public Spot Spot { get; private set; }
     public WorkOrderState State { get; private set; }
@@ -21,12 +21,22 @@ public sealed class WorkOrder : AuditableEntity
     public Invoice? Invoice { get; set; }
     public decimal? Discount { get; private set; }
     public decimal? Tax { get; private set; }
-    public decimal? TotalPartsCost => _repairTasks.SelectMany(rt => rt.Parts).Sum(p => p.Cost);
-    public decimal? TotalLaborCost => _repairTasks.Sum(rt => rt.LaborCost);
-    public decimal? Total => (TotalPartsCost ?? 0) + (TotalLaborCost ?? 0);
+    public decimal TotalPartsCost => _repairTasks.SelectMany(rt => rt.Parts).Sum(p => p.Cost);
+    public decimal TotalLaborCost => _repairTasks.Sum(rt => rt.LaborCost);
+    public decimal Total => TotalPartsCost  + TotalLaborCost ;
 
+
+    public TimeSpan EstimatedDuration => TimeSpan.FromMinutes(
+        _repairTasks.Sum(rt => (int) rt.EstimatedDurationInMins));
+
+    public DateTimeOffset EndAtUtc {
+        get => StartAtUtc + EstimatedDuration;
+        //only for Ef Core so we can query on the sql server side with the EndAtUtc property
+        private set {}
+    }
     private readonly List<RepairTask> _repairTasks = [];
     public IEnumerable<RepairTask> RepairTasks => _repairTasks.AsReadOnly();
+
 
     private WorkOrder()
     { }
@@ -36,11 +46,10 @@ public sealed class WorkOrder : AuditableEntity
     {
         VehicleId = vehicleId;
         StartAtUtc = startAt;
-        EndAtUtc = endAt;
         LaborId = laborId;
         Spot = spot;
         State = state;
-        _repairTasks = repairTasks;
+        _repairTasks = repairTasks?? [];
     }
 
     public static ErrorOr<WorkOrder> Create(Guid id, Guid vehicleId, DateTimeOffset startAt, DateTimeOffset endAt, Guid laborId, Spot spot, List<RepairTask> repairTasks)
@@ -58,7 +67,7 @@ public sealed class WorkOrder : AuditableEntity
         if (!Enum.IsDefined(spot))
             return WorkOrderErrors.SpotInvalid;
 
-        return new WorkOrder(id, vehicleId, startAt, endAt, laborId, spot, WorkOrderState.Scheduled, repairTasks);
+        return new WorkOrder(id, vehicleId, startAt, endAt, laborId, spot, WorkOrderState.Scheduled, repairTasks?? []);
     }
     private bool IsEditable => State is not (WorkOrderState.Completed or WorkOrderState.Cancelled or WorkOrderState.InProgress);
     public ErrorOr<Updated> AddRepairTask(RepairTask repairTask)
@@ -73,16 +82,15 @@ public sealed class WorkOrder : AuditableEntity
         return Result.Updated;
     }
 
-    public ErrorOr<Updated> UpdateTiming(DateTimeOffset startAt, DateTimeOffset endAt)
+    public ErrorOr<Updated> UpdateTiming(DateTimeOffset startAt/*, DateTimeOffset endAt*/)
     {
         if (!IsEditable)
             return WorkOrderErrors.TimingReadonly(Id.ToString(), State);
 
-        if (endAt <= startAt)
-            return WorkOrderErrors.InvalidTiming;
+        //if (endAt <= startAt)
+        //    return WorkOrderErrors.InvalidTiming;
 
         StartAtUtc = startAt;
-        EndAtUtc = endAt;
 
         return Result.Updated;
     }

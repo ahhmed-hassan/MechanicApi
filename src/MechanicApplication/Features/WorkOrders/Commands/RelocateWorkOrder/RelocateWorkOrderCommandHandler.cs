@@ -55,7 +55,7 @@ namespace MechanicApplication.Features.WorkOrders.Commands.RelocateWorkOrder
                                                                       workOrder.StartAtUtc,
                                                                       endAt).Result
                 , ApplicationErrors.VehicleSchedulingConflict)
-                .Then(_ => workOrder.UpdateTiming(request.NewStartAt, endAt))
+                .Then(_ => workOrder.UpdateTiming(request.NewStartAt))
                 .Else(error => { _logger.LogError("Failed to update timing {Error} ", error.First()); return error; })
                 .Then(_ => workOrder.UpdateSpot(request.NewSpot))
                 .Else(error => { _logger.LogError("Failed to update spot : {Error}", error.First()); return error; })

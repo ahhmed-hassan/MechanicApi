@@ -67,6 +67,6 @@ public class WorkORderConfiguration : IEntityTypeConfiguration<WorkOrder>
         builder.Ignore(wo => wo.Total);
         builder.Ignore(wo => wo.TotalLaborCost);
         builder.Ignore(wo => wo.TotalPartsCost);
-       
+        builder.Ignore(w => w.EstimatedDuration);
     }
 }

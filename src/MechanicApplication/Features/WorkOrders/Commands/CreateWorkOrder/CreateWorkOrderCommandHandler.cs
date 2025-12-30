@@ -2,6 +2,7 @@
 
 using ErrorOr;
 using MechanicApplication.Common.Errors;
+using MechanicApplication.Common.Extensions;
 using MechanicApplication.Common.Interfaces;
 using MechanicApplication.Features.WorkOrders.Dtos;
 using MechanicApplication.Features.WorkOrders.Mappers;
@@ -59,10 +60,11 @@ public sealed class CreateWorkOrderCommandHandler(
 
         //Vechicle can belong to many workOrders, but of course only one of them at any specific time
         var theSameVehicleIsAssignedToSomeWorkOrderAtOverlappingTime = await _appDbContext.WorkOrders
+            .WhereRangeOverlapps(request.StartAt, endAt)
             .AnyAsync(wo =>
-            wo.VehicleId == request.VehicleId &&
-            wo.StartAtUtc < endAt &&
-            wo.EndAtUtc > request.StartAt
+            wo.VehicleId == request.VehicleId //&&
+            //wo.StartAtUtc < endAt &&
+            //wo.EndAtUtc > request.StartAt
             , cancellationToken
             );
 

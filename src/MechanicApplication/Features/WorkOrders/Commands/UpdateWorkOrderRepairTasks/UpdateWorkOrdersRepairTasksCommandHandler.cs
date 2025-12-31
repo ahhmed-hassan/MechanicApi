@@ -59,6 +59,11 @@ public sealed class UpdateWorkOrdersRepairTasksCommandHandler
             _availablilityChecker.IsOutsideOperatingHours(
                 workOrder.StartAtUtc, workOrder.EndAtUtc)
             , ApplicationErrors.WorkOrderOutsideOperatingHour(workOrder.StartAtUtc, workOrder.EndAtUtc))
+        .ThenAsync(_ =>
+              _availablilityChecker.CheckSpotAvailabilityAsync(
+            workOrder.Spot, workOrder.StartAtUtc, workOrder.EndAtUtc, workOrder.Id)
+              .Then( _ => Result.Updated)
+              )
         .ThenDoAsync(async _ =>
         {
             await _context.SaveChangesAsync(cancellationToken);

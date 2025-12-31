@@ -115,4 +115,59 @@ public class UpdateWorkOrderRepairTasksCommandHandlerTests(WebAppFactory factory
         Assert.True(result.IsError);
         Assert.Equal(ApplicationErrors.WorkOrderNotFound.Code, result.FirstError.Code);
     }
+
+    [Fact]
+    public async Task Handle_WithPartiallyExistingRepairTasks_ShouldFail()
+    {
+        // Arrange
+        Assert.True(IsEmptyDatabase());
+
+        var customer = CustomerFactory.CreateCustomer().Value;
+        var vehicle = customer.Vehicles.First();
+        var employee = EmployeeFactory.CreateEmployee().Value;
+
+        // Original repair task for the work order
+        var originalRepairTask = RepairTaskFactory.CreateRepairTask(
+            name: "Oil Change",
+            repairDurationInMinutes: RepairDurationInMinutes.Min30).Value;
+
+        // Only ONE new repair task exists
+        var existingRepairTask = RepairTaskFactory.CreateRepairTask(
+            name: "Brake Inspection",
+            repairDurationInMinutes: RepairDurationInMinutes.Min45).Value;
+
+        await _dbContext.Customers.AddAsync(customer);
+        await _dbContext.Vehicles.AddAsync(vehicle);
+        await _dbContext.Employees.AddAsync(employee);
+        await _dbContext.RepairTasks.AddAsync(originalRepairTask);
+        await _dbContext.RepairTasks.AddAsync(existingRepairTask);
+        await _dbContext.SaveChangesAsync(default);
+
+        var scheduledAt = DateTimeOffset.UtcNow.Date.AddDays(1).AddHours(10);
+        var originalEndAt = scheduledAt.AddMinutes((int)originalRepairTask.EstimatedDurationInMins);
+
+        var workOrder = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: scheduledAt,
+            endAt: originalEndAt,
+            laborId: employee.Id,
+            spot: Spot.A,
+            repairTasks: [originalRepairTask]).Value;
+
+        await _dbContext.WorkOrders.AddAsync(workOrder);
+        await _dbContext.SaveChangesAsync(default);
+
+        // Try to update with one existing and one non-existent repair task
+        var nonExistentRepairTaskId = Guid.NewGuid();
+        var command = new UpdateWorkOrderRepairTasksCommand(
+            WorkOrderId: workOrder.Id,
+            RepairTasksIds: [existingRepairTask.Id, nonExistentRepairTaskId]);
+
+        // Act
+        var result = await _mediator.Send(command);
+
+        // Assert
+        Assert.True(result.IsError);
+        Assert.Equal(ApplicationErrors.RepairTaskNotFound.Code, result.FirstError.Code);
+    }
 }

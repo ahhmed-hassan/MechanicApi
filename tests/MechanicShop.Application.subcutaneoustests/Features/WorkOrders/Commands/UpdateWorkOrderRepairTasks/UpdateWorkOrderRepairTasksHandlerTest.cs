@@ -170,4 +170,64 @@ public class UpdateWorkOrderRepairTasksCommandHandlerTests(WebAppFactory factory
         Assert.True(result.IsError);
         Assert.Equal(ApplicationErrors.RepairTaskNotFound.Code, result.FirstError.Code);
     }
+
+    [Fact]
+    public async Task Handle_WithUpdatedTasksExceedingOperatingHours_ShouldFail()
+    {
+        // Arrange
+        Assert.True(IsEmptyDatabase());
+
+        var customer = CustomerFactory.CreateCustomer().Value;
+        var vehicle = customer.Vehicles.First();
+        var employee = EmployeeFactory.CreateEmployee().Value;
+
+        // Original task: 30 minutes, ending at 17:30
+        var originalRepairTask = RepairTaskFactory.CreateRepairTask(
+            name: "Oil Change",
+            repairDurationInMinutes: RepairDurationInMinutes.Min30).Value;
+
+        // New task: Very long duration that will exceed operating hours (18:00)
+        // If we start at 10:00 and add 9 hours (540 min), we'd end at 19:00 - outside hours!
+        var longRepairTask = RepairTaskFactory.CreateRepairTask(
+            name: "Engine Overhaul",
+            repairDurationInMinutes: RepairDurationInMinutes.Min180).Value;
+
+        await _dbContext.Customers.AddAsync(customer);
+        await _dbContext.Vehicles.AddAsync(vehicle);
+        await _dbContext.Employees.AddAsync(employee);
+        await _dbContext.RepairTasks.AddAsync(originalRepairTask);
+        await _dbContext.RepairTasks.AddAsync(longRepairTask);
+        await _dbContext.SaveChangesAsync(default);
+
+        // Schedule exactly one hour before closing time, so we have 30 minutes left before closing after making this task. 
+        var scheduledAt = DateTimeOffset.UtcNow.Date.AddDays(1)
+            .Add(_factory.AppSettings.ClosingTime.ToTimeSpan())
+            .AddHours(-1)
+            ;
+        var originalEndAt = scheduledAt.AddMinutes((int)originalRepairTask.EstimatedDurationInMins);
+
+        var workOrder = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: scheduledAt,
+            endAt: originalEndAt,
+            laborId: employee.Id,
+            spot: Spot.A,
+            repairTasks: [originalRepairTask]).Value;
+
+        await _dbContext.WorkOrders.AddAsync(workOrder);
+        await _dbContext.SaveChangesAsync(default);
+
+        // Try to update with a long task that would end at 19:00 (past closing time of 18:00)
+        var command = new UpdateWorkOrderRepairTasksCommand(
+            WorkOrderId: workOrder.Id,
+            RepairTasksIds: [longRepairTask.Id]);
+
+        // Act
+        var result = await _mediator.Send(command);
+
+        // Assert
+        Assert.True(result.IsError);
+        //Care only about the code itself 
+        Assert.Equal(ApplicationErrors.WorkOrderOutsideOperatingHour(DateTimeOffset.Now, DateTimeOffset.Now).Code, result.FirstError.Code);
+    }
 }

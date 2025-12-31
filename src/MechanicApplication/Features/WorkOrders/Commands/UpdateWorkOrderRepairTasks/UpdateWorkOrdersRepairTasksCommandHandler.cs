@@ -15,13 +15,15 @@ public sealed class UpdateWorkOrdersRepairTasksCommandHandler
     (
     IAppDbContext context,
     ILogger<UpdateWorkOrdersRepairTasksCommandHandler> logger, 
-    HybridCache cache
+    HybridCache cache, 
+    IWorkOrderPolicy availablilityChecker 
     )
     : IRequestHandler<UpdateWorkOrderRepairTasksCommand, ErrorOr<Updated>>
 {
     private readonly IAppDbContext _context = context;
     private readonly ILogger<UpdateWorkOrdersRepairTasksCommandHandler> _logger = logger;
     private readonly HybridCache _cache = cache;
+    private readonly IWorkOrderPolicy _availablilityChecker = availablilityChecker;
     public async Task<ErrorOr<Updated>> Handle(UpdateWorkOrderRepairTasksCommand request, CancellationToken cancellationToken)
     {
         var workOrder = await _context.WorkOrders
@@ -53,6 +55,10 @@ public sealed class UpdateWorkOrdersRepairTasksCommandHandler
          workOrder.ClearRepairTasks(),
          (currentResult, requestedTask) => currentResult.Then(_ => workOrder.AddRepairTask(requestedTask))
          )
+        .FailIf(_ =>
+            _availablilityChecker.IsOutsideOperatingHours(
+                workOrder.StartAtUtc, workOrder.EndAtUtc)
+            , ApplicationErrors.WorkOrderOutsideOperatingHour(workOrder.StartAtUtc, workOrder.EndAtUtc))
         .ThenDoAsync(async _ =>
         {
             await _context.SaveChangesAsync(cancellationToken);

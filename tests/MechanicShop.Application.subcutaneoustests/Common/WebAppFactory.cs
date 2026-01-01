@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using System;
 using Testcontainers.MsSql;
 using Xunit;
@@ -32,6 +33,12 @@ public class WebAppFactory : WebApplicationFactory<AssemblyMarker>, IAsyncLifeti
         .CreateScope()
         .ServiceProvider
         .GetRequiredService<IAppDbContext>();
+
+    public AppSettings AppSettings => Services
+        .CreateScope()
+        .ServiceProvider
+        .GetRequiredService<IOptions<AppSettings>>()
+        .Value;
     Task IAsyncLifetime.InitializeAsync()
     {
         return _dbContainer.StartAsync()

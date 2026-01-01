@@ -2,9 +2,11 @@
 using ErrorOr;
 using MechanicApi.ContractDomainMapping;
 using MechanicApplication.Common.Constants;
+using MechanicApplication.Features.RepairTasks.Commands.UpdateRepairTask;
 using MechanicApplication.Features.WorkOrders.Commands.AssignLabor;
 using MechanicApplication.Features.WorkOrders.Commands.CreateWorkOrder;
 using MechanicApplication.Features.WorkOrders.Commands.RelocateWorkOrder;
+using MechanicApplication.Features.WorkOrders.Commands.UpdateWorkOrderRepairTasks;
 using MechanicApplication.Features.WorkOrders.Commands.UpdateWorkOrderState;
 using MechanicApplication.Features.WorkOrders.Dtos;
 using MechanicContracts.Requests.WorkOrders;
@@ -104,5 +106,21 @@ namespace MechanicApi.Controllers
             return result.Match (_ => NoContent(), Problem);
             
         }
+
+        [HttpPut("{wokrorderId:guid}/repair-tasks")]
+        [Authorize(Policy = nameof(Role.Manager))]
+        [ProducesResponseType<NoContentResult>(StatusCodes.Status204NoContent)]
+        [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+        [EndpointSummary("Update repair tasks associated with a work order")]
+        [EndpointDescription("Update the list of repair tasks associated with a specific work order. Only managers can perform this action.")]
+        [EndpointName("UpdateWorkOrderRepairTasks")]
+        public async Task<ActionResult<NoContentResult>> UpdateRepairTasks(Guid wokrorderId, ModifyRepairTasksRequest request, CancellationToken ct)
+        {
+            var updateRepairTasksCommand = new UpdateWorkOrderRepairTasksCommand(
+                                                wokrorderId, request.RepairTasksIds);
+            var result = await sender.Send(updateRepairTasksCommand, ct);
+            return result.Match(_ => NoContent(), Problem);
+        }
+        
     }
 }

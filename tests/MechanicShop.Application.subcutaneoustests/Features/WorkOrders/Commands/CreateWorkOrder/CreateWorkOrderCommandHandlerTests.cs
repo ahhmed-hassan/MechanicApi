@@ -213,9 +213,8 @@ public class CreateWorkOrderCommandHandlerTests(WebAppFactory factory)
         var scheduledAt = DateTimeOffset.UtcNow.Date
            .AddDays(1)
            .AddHours(15);
-        var endAt = scheduledAt.AddMinutes((int)repairTask.EstimatedDurationInMins);
 
-        var alreadyExistingWorkOrder = WorkOrderFactory.CreateWorkOrder(Guid.NewGuid(), vehicle.Id, scheduledAt, endAt, employee1.Id);
+        var alreadyExistingWorkOrder = WorkOrderFactory.CreateWorkOrder(Guid.NewGuid(), vehicle.Id, scheduledAt, employee1.Id);
         await _dbContext.WorkOrders.AddAsync(alreadyExistingWorkOrder.Value);
         await _dbContext.SaveChangesAsync(default);
 

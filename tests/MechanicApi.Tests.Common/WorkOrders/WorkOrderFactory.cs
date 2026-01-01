@@ -13,7 +13,6 @@ public static class WorkOrderFactory
         Guid? id = null,
         Guid? vehicleId = null,
         DateTimeOffset? startAt = null,
-        DateTimeOffset? endAt = null,
         Guid? laborId = null,
         Spot spot = Spot.A,
         List<RepairTask>? repairTasks = null)
@@ -22,7 +21,6 @@ public static class WorkOrderFactory
             id ?? Guid.NewGuid(),
             vehicleId ?? Guid.NewGuid(),
             startAt ?? DateTimeOffset.UtcNow,
-            endAt ?? DateTimeOffset.UtcNow.AddHours(1),
             laborId ?? Guid.NewGuid(),
             spot ,
             repairTasks ?? [RepairTaskFactory.CreateRepairTask().Value]);

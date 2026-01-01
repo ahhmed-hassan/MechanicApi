@@ -48,13 +48,11 @@ public class UpdateWorkOrderRepairTasksCommandHandlerTests(WebAppFactory factory
         await _dbContext.SaveChangesAsync(default);
 
         var scheduledAt = DateTimeOffset.UtcNow.Date.AddDays(1).AddHours(10);
-        var originalEndAt = scheduledAt.AddMinutes((int)originalRepairTask.EstimatedDurationInMins);
 
         // Create initial work order with original repair task
         var workOrder = WorkOrderFactory.CreateWorkOrder(
             vehicleId: vehicle.Id,
             startAt: scheduledAt,
-            endAt: originalEndAt,
             laborId: employee.Id,
             spot: Spot.A,
             repairTasks: [originalRepairTask]).Value;
@@ -144,12 +142,10 @@ public class UpdateWorkOrderRepairTasksCommandHandlerTests(WebAppFactory factory
         await _dbContext.SaveChangesAsync(default);
 
         var scheduledAt = DateTimeOffset.UtcNow.Date.AddDays(1).AddHours(10);
-        var originalEndAt = scheduledAt.AddMinutes((int)originalRepairTask.EstimatedDurationInMins);
 
         var workOrder = WorkOrderFactory.CreateWorkOrder(
             vehicleId: vehicle.Id,
             startAt: scheduledAt,
-            endAt: originalEndAt,
             laborId: employee.Id,
             spot: Spot.A,
             repairTasks: [originalRepairTask]).Value;
@@ -204,12 +200,10 @@ public class UpdateWorkOrderRepairTasksCommandHandlerTests(WebAppFactory factory
             .Add(_factory.AppSettings.ClosingTime.ToTimeSpan())
             .AddHours(-1)
             ;
-        var originalEndAt = scheduledAt.AddMinutes((int)originalRepairTask.EstimatedDurationInMins);
 
         var workOrder = WorkOrderFactory.CreateWorkOrder(
             vehicleId: vehicle.Id,
             startAt: scheduledAt,
-            endAt: originalEndAt,
             laborId: employee.Id,
             spot: Spot.A,
             repairTasks: [originalRepairTask]).Value;
@@ -268,7 +262,6 @@ public class UpdateWorkOrderRepairTasksCommandHandlerTests(WebAppFactory factory
         var workOrder1 = WorkOrderFactory.CreateWorkOrder(
             vehicleId: vehicle1.Id,
             startAt: workOrder1StartAt,
-            endAt: workOrder1StartAt.AddHours(2), // 14:00
             laborId: employee1.Id,
             spot: Spot.A,
             repairTasks: [shortTask]).Value;
@@ -277,7 +270,6 @@ public class UpdateWorkOrderRepairTasksCommandHandlerTests(WebAppFactory factory
         var workOrder2 = WorkOrderFactory.CreateWorkOrder(
             vehicleId: vehicle2.Id,
             startAt: baseTime, // 10:00
-            endAt: baseTime.AddHours(1), // 11:00
             laborId: employee2.Id,
             spot: Spot.A, // ✅ Same spot as WorkOrder1
             repairTasks: [shortTask]).Value;
@@ -335,7 +327,6 @@ public class UpdateWorkOrderRepairTasksCommandHandlerTests(WebAppFactory factory
         var workOrder1 = WorkOrderFactory.CreateWorkOrder(
             vehicleId: vehicle1.Id,
             startAt: workOrder1StartAt,
-            endAt: workOrder1StartAt.AddHours(2), // 14:00
             laborId: employee.Id, // ✅ Same employee
             spot: Spot.A,
             repairTasks: [shortTask]).Value;
@@ -344,7 +335,6 @@ public class UpdateWorkOrderRepairTasksCommandHandlerTests(WebAppFactory factory
         var workOrder2 = WorkOrderFactory.CreateWorkOrder(
             vehicleId: vehicle2.Id,
             startAt: baseTime, // 10:00
-            endAt: baseTime.AddHours(1), // 11:00
             laborId: employee.Id, // ✅ Same employee
             spot: Spot.B, // Different spot, so no spot conflict
             repairTasks: [shortTask]).Value;

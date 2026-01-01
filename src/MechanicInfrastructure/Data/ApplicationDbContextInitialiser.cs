@@ -257,7 +257,6 @@ public class ApplicationDbContextInitialiser(
                             Guid.NewGuid(),
                             availableVehicle.Id,
                             startAt,
-                            endAt,
                             Guid.Parse(laborId),
                             spot,
                             selectedTask);
@@ -301,7 +300,6 @@ public class ApplicationDbContextInitialiser(
                 Guid.NewGuid(),
                 _context.Vehicles.OrderBy(_ => Guid.NewGuid()).First().Id,
                 startTimeFirstOrder,
-                startTimeFirstOrder.AddMinutes(repairTasksForFirstOrder.Sum(rt => (int)rt.EstimatedDurationInMins)),
                 Guid.Parse(labor01.Id),
                 Spot.A,
                 repairTasksForFirstOrder).Value;
@@ -322,13 +320,11 @@ public class ApplicationDbContextInitialiser(
                 0,
                 TimeSpan.Zero);
 
-            var endTimeSecondOrder = roundedStart.AddMinutes((int)repairTasksEndingNow.EstimatedDurationInMins);
 
             WorkOrder value = WorkOrder.Create(
                 Guid.NewGuid(),
                 _context.Vehicles.OrderBy(_ => Guid.NewGuid()).First().Id,
                 roundedStart,
-                endTimeSecondOrder,
                 Guid.Parse(labor02.Id),
                 Spot.B,
                 [repairTasksEndingNow])

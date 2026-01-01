@@ -105,8 +105,7 @@ public sealed class CreateWorkOrderCommandHandler(
         request.StartAt,
         laborId: request.LaborId,
         spot: request.Spot,
-        repairTasks: repaitrTasks,
-        endAt: endAt
+        repairTasks: repaitrTasks
     ));
         return await workOrderResult
 

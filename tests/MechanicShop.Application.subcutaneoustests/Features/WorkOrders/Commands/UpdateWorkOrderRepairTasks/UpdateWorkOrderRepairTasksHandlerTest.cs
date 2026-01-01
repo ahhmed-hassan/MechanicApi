@@ -299,4 +299,72 @@ public class UpdateWorkOrderRepairTasksCommandHandlerTests(WebAppFactory factory
         Assert.True(result.IsError);
         Assert.Equal("MechanicShop_Spot_Full", result.FirstError.Code);
     }
+
+    [Fact]
+    public async Task Handle_WithLaborOccupied_ShouldFail()
+    {
+        // Arrange
+        Assert.True(IsEmptyDatabase());
+
+        var vehicle1 = VehicleFactory.CreateVehicle().Value;
+        var vehicle2 = VehicleFactory.CreateVehicle().Value;
+        var customer = CustomerFactory.CreateCustomer(vehicles: [vehicle1, vehicle2]).Value;
+
+        var employee = EmployeeFactory.CreateEmployee().Value; // ✅ Same employee for both
+
+        var shortTask = RepairTaskFactory.CreateRepairTask(
+            name: "Quick Inspection",
+            repairDurationInMinutes: RepairDurationInMinutes.Min60).Value; // 1 hour
+
+        var longTask = RepairTaskFactory.CreateRepairTask(
+            name: "Extended Repair",
+            repairDurationInMinutes: RepairDurationInMinutes.Min180).Value; // 3 hours
+
+        await _dbContext.Customers.AddAsync(customer);
+        await _dbContext.Vehicles.AddAsync(vehicle1);
+        await _dbContext.Vehicles.AddAsync(vehicle2);
+        await _dbContext.Employees.AddAsync(employee);
+        await _dbContext.RepairTasks.AddAsync(shortTask);
+        await _dbContext.RepairTasks.AddAsync(longTask);
+        await _dbContext.SaveChangesAsync(default);
+
+        var baseTime = DateTimeOffset.UtcNow.Date.AddDays(1).AddHours(10);
+
+        // WorkOrder1: Same employee, 12:00 - 14:00, Spot A (won't be modified)
+        var workOrder1StartAt = baseTime.AddHours(2); // 12:00
+        var workOrder1 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle1.Id,
+            startAt: workOrder1StartAt,
+            endAt: workOrder1StartAt.AddHours(2), // 14:00
+            laborId: employee.Id, // ✅ Same employee
+            spot: Spot.A,
+            repairTasks: [shortTask]).Value;
+
+        // WorkOrder2: Same employee, 10:00 - 11:00, Spot B (currently no conflict)
+        var workOrder2 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle2.Id,
+            startAt: baseTime, // 10:00
+            endAt: baseTime.AddHours(1), // 11:00
+            laborId: employee.Id, // ✅ Same employee
+            spot: Spot.B, // Different spot, so no spot conflict
+            repairTasks: [shortTask]).Value;
+
+        await _dbContext.WorkOrders.AddAsync(workOrder1);
+        await _dbContext.WorkOrders.AddAsync(workOrder2);
+        await _dbContext.SaveChangesAsync(default);
+
+        // Try to update WorkOrder2 with a long task
+        // This would extend it from 10:00 - 13:00, which overlaps with WorkOrder1 (12:00 - 14:00)
+        // Same employee cannot work on both overlapping work orders
+        var command = new UpdateWorkOrderRepairTasksCommand(
+            WorkOrderId: workOrder2.Id,
+            RepairTasksIds: [longTask.Id]);
+
+        // Act
+        var result = await _mediator.Send(command);
+
+        // Assert
+        Assert.True(result.IsError);
+        Assert.Equal(ApplicationErrors.LaborOccupied.Code, result.FirstError.Code);
+    }
 }

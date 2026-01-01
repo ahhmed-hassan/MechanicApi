@@ -2,6 +2,7 @@
 
 using ErrorOr;
 using MechanicApplication.Common.Errors;
+using MechanicApplication.Common.Extensions;
 using MechanicApplication.Common.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -55,6 +56,12 @@ public sealed class UpdateWorkOrdersRepairTasksCommandHandler
          workOrder.ClearRepairTasks(),
          (currentResult, requestedTask) => currentResult.Then(_ => workOrder.AddRepairTask(requestedTask))
          )
+        .FailIfAsync(async _ =>
+           await _availablilityChecker.IsLaborOccupied(workOrder.LaborId, workOrder.Id, workOrder.StartAtUtc, workOrder.EndAtUtc)
+           , ApplicationErrors.LaborOccupied
+        )
+
+       
         .FailIf(_ =>
             _availablilityChecker.IsOutsideOperatingHours(
                 workOrder.StartAtUtc, workOrder.EndAtUtc)

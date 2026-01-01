@@ -15,7 +15,6 @@ public class WorkOrderTests
                     id: Guid.Empty,
                     vehicleId: Guid.NewGuid(),
                     startAt: DateTimeOffset.UtcNow,
-                    endAt: DateTimeOffset.UtcNow.AddHours(1),
                     laborId: Guid.NewGuid(),
                     spot: Spot.A,
                     repairTasks: [RepairTaskFactory.CreateRepairTask().Value]);
@@ -32,7 +31,6 @@ public class WorkOrderTests
                            id: Guid.NewGuid(),
                            vehicleId: Guid.Empty,
                            startAt: DateTimeOffset.UtcNow,
-                           endAt: DateTimeOffset.UtcNow.AddHours(1),
                            laborId: Guid.NewGuid(),
                            spot: Spot.A,
                            repairTasks: [RepairTaskFactory.CreateRepairTask().Value]);
@@ -49,7 +47,6 @@ public class WorkOrderTests
                            id: Guid.NewGuid(),
                            vehicleId: Guid.NewGuid(),
                            startAt: DateTimeOffset.UtcNow,
-                           endAt: DateTimeOffset.UtcNow.AddHours(1),
                            laborId: Guid.NewGuid(),
                            spot: Spot.A,
                            repairTasks: []);
@@ -66,7 +63,6 @@ public class WorkOrderTests
                               id: Guid.NewGuid(),
                               vehicleId: Guid.NewGuid(),
                               startAt: DateTimeOffset.UtcNow,
-                              endAt: DateTimeOffset.UtcNow.AddHours(1),
                               laborId: Guid.Empty,
                               spot: Spot.A,
                               repairTasks: [RepairTaskFactory.CreateRepairTask().Value]);
@@ -76,22 +72,6 @@ public class WorkOrderTests
         Assert.Equal(WorkOrderErrors.LaborIdRequired.Code, wo.FirstError.Code);
     }
 
-    [Fact]
-    public void Create_ShouldReturnError_WhenTimingInvalid()
-    {
-        var wo = WorkOrder.Create(
-                           id: Guid.NewGuid(),
-                           vehicleId: Guid.NewGuid(),
-                           startAt: DateTimeOffset.UtcNow.AddHours(1),
-                           endAt: DateTimeOffset.UtcNow,
-                           laborId: Guid.NewGuid(),
-                           spot: Spot.A,
-                           repairTasks: [RepairTaskFactory.CreateRepairTask().Value]);
-
-        Assert.True(wo.IsError);
-
-        Assert.Equal(WorkOrderErrors.InvalidTiming.Code, wo.FirstError.Code);
-    }
 
     [Fact]
     public void Create_ShouldReturnError_WhenSpotInvalid()
@@ -102,7 +82,6 @@ public class WorkOrderTests
                       id: Guid.NewGuid(),
                       vehicleId: Guid.NewGuid(),
                       startAt: DateTimeOffset.UtcNow,
-                      endAt: DateTimeOffset.UtcNow.AddHours(1),
                       laborId: Guid.NewGuid(),
                       spot: invalidSpot,
                       repairTasks: [RepairTaskFactory.CreateRepairTask().Value]);
@@ -119,7 +98,6 @@ public class WorkOrderTests
                    id: Guid.NewGuid(),
                    vehicleId: Guid.NewGuid(),
                    startAt: DateTimeOffset.UtcNow,
-                   endAt: DateTimeOffset.UtcNow.AddHours(1),
                    laborId: Guid.NewGuid(),
                    spot: Spot.A,
                    repairTasks: [RepairTaskFactory.CreateRepairTask().Value]).Value;
@@ -140,7 +118,6 @@ public class WorkOrderTests
                        id: Guid.NewGuid(),
                        vehicleId: Guid.NewGuid(),
                        startAt: DateTimeOffset.UtcNow,
-                       endAt: DateTimeOffset.UtcNow.AddHours(1),
                        laborId: Guid.NewGuid(),
                        spot: Spot.A,
                        repairTasks: [RepairTaskFactory.CreateRepairTask().Value]).Value;
@@ -158,7 +135,6 @@ public class WorkOrderTests
                id: Guid.NewGuid(),
                vehicleId: Guid.NewGuid(),
                startAt: DateTimeOffset.UtcNow,
-               endAt: DateTimeOffset.UtcNow.AddHours(1),
                laborId: Guid.NewGuid(),
                spot: Spot.A,
                repairTasks: [RepairTaskFactory.CreateRepairTask().Value]).Value;
@@ -195,7 +171,6 @@ public class WorkOrderTests
                       id: Guid.NewGuid(),
                       vehicleId: Guid.NewGuid(),
                       startAt: DateTimeOffset.UtcNow,
-                      endAt: DateTimeOffset.UtcNow.AddHours(1),
                       laborId: Guid.NewGuid(),
                       spot: Spot.A,
                       repairTasks: [RepairTaskFactory.CreateRepairTask().Value]).Value;
@@ -213,7 +188,6 @@ public class WorkOrderTests
             id: Guid.NewGuid(),
             vehicleId: Guid.NewGuid(),
             startAt: DateTimeOffset.UtcNow,
-            endAt: DateTimeOffset.UtcNow.AddHours(1),
             laborId: Guid.NewGuid(),
             spot: Spot.A,
             repairTasks: [RepairTaskFactory.CreateRepairTask().Value]).Value;
@@ -232,7 +206,6 @@ public class WorkOrderTests
             id: Guid.NewGuid(),
             vehicleId: Guid.NewGuid(),
             startAt: DateTimeOffset.UtcNow,
-            endAt: DateTimeOffset.UtcNow.AddHours(1),
             laborId: Guid.NewGuid(),
             spot: Spot.A,
             repairTasks: [RepairTaskFactory.CreateRepairTask().Value]).Value;
@@ -250,7 +223,6 @@ public class WorkOrderTests
             id: Guid.NewGuid(),
             vehicleId: Guid.NewGuid(),
             startAt: DateTimeOffset.UtcNow,
-            endAt: DateTimeOffset.UtcNow.AddHours(1),
             laborId: Guid.NewGuid(),
             spot: Spot.A,
             repairTasks: [RepairTaskFactory.CreateRepairTask().Value]).Value;
@@ -271,7 +243,6 @@ public class WorkOrderTests
             id: Guid.NewGuid(),
             vehicleId: Guid.NewGuid(),
             startAt: DateTimeOffset.UtcNow,
-            endAt: DateTimeOffset.UtcNow.AddHours(1),
             laborId: Guid.NewGuid(),
             spot: Spot.A,
             repairTasks: [RepairTaskFactory.CreateRepairTask().Value]).Value;

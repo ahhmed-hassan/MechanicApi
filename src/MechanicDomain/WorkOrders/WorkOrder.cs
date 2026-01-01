@@ -41,7 +41,7 @@ public sealed class WorkOrder : AuditableEntity
     private WorkOrder()
     { }
 
-    private WorkOrder(Guid id, Guid vehicleId, DateTimeOffset startAt, DateTimeOffset endAt, Guid laborId, Spot spot, WorkOrderState state, List<RepairTask> repairTasks)
+    private WorkOrder(Guid id, Guid vehicleId, DateTimeOffset startAt, Guid laborId, Spot spot, WorkOrderState state, List<RepairTask> repairTasks)
         : base(id)
     {
         VehicleId = vehicleId;
@@ -52,7 +52,7 @@ public sealed class WorkOrder : AuditableEntity
         _repairTasks = repairTasks?? [];
     }
 
-    public static ErrorOr<WorkOrder> Create(Guid id, Guid vehicleId, DateTimeOffset startAt, DateTimeOffset endAt, Guid laborId, Spot spot, List<RepairTask> repairTasks)
+    public static ErrorOr<WorkOrder> Create(Guid id, Guid vehicleId, DateTimeOffset startAt, Guid laborId, Spot spot, List<RepairTask> repairTasks)
     {
         if (id == Guid.Empty)
             return WorkOrderErrors.WorkOrderIdRequired;
@@ -62,12 +62,10 @@ public sealed class WorkOrder : AuditableEntity
             return WorkOrderErrors.RepairTasksRequired;
         if (laborId == Guid.Empty)
             return WorkOrderErrors.LaborIdRequired;
-        if (endAt <= startAt)
-            return WorkOrderErrors.InvalidTiming;
         if (!Enum.IsDefined(spot))
             return WorkOrderErrors.SpotInvalid;
 
-        return new WorkOrder(id, vehicleId, startAt, endAt, laborId, spot, WorkOrderState.Scheduled, repairTasks?? []);
+        return new WorkOrder(id, vehicleId, startAt, laborId, spot, WorkOrderState.Scheduled, repairTasks?? []);
     }
     private bool IsEditable => State is not (WorkOrderState.Completed or WorkOrderState.Cancelled or WorkOrderState.InProgress);
     public ErrorOr<Updated> AddRepairTask(RepairTask repairTask)

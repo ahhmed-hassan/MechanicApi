@@ -32,7 +32,7 @@ public sealed class DeleteWrokOrderCommandHandler
             return ApplicationErrors.WorkOrderNotFound;
         }
 
-        if (workOrder.State is not WorkOrderState.Scheduled)
+        if (!workOrder.IsEditable)
         {
             _logger.LogError(
                 "Deletion failed: only 'Scheduled'  WorkOrders can be deleted. Current status: {Status}",

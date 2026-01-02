@@ -67,7 +67,7 @@ public sealed class WorkOrder : AuditableEntity
 
         return new WorkOrder(id, vehicleId, startAt, laborId, spot, WorkOrderState.Scheduled, repairTasks?? []);
     }
-    private bool IsEditable => State is not (WorkOrderState.Completed or WorkOrderState.Cancelled or WorkOrderState.InProgress);
+    public bool IsEditable => State is not (WorkOrderState.Completed or WorkOrderState.Cancelled or WorkOrderState.InProgress);
     public ErrorOr<Updated> AddRepairTask(RepairTask repairTask)
     {
         if (!IsEditable)

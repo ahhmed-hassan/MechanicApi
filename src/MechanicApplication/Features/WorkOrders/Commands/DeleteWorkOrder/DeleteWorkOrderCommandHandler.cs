@@ -24,11 +24,11 @@ public sealed class DeleteWrokOrderCommandHandler
     public async Task<ErrorOr<Deleted>> Handle(DeleteWorkOrderCommand request, CancellationToken cancellationToken)
     {
         var workOrder = await _context.WorkOrders
-            .FirstOrDefaultAsync(workOrder => workOrder.Id == request.wokrOrderId, cancellationToken);
+            .FirstOrDefaultAsync(workOrder => workOrder.Id == request.workOrderId, cancellationToken);
 
         if (workOrder is null)
         {
-            _logger.LogError("WorkOrder with ID {WorkOrderId} not found for deletion.", request.wokrOrderId);
+            _logger.LogError("WorkOrder with ID {WorkOrderId} not found for deletion.", request.workOrderId);
             return ApplicationErrors.WorkOrderNotFound;
         }
 

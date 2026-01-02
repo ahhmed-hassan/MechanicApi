@@ -6,7 +6,7 @@ public sealed class DeleteWrokOrderCommandValidator : AbstractValidator<DeleteWo
 {
     public DeleteWrokOrderCommandValidator()
     {
-        RuleFor(x=> x.wokrOrderId)
+        RuleFor(x=> x.workOrderId)
             .NotEmpty()
             .WithMessage("Work Order Id must be provided.")
             .WithErrorCode("WorkOrderId_Required")

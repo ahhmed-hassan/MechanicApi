@@ -108,17 +108,17 @@ namespace MechanicApi.Controllers
             
         }
 
-        [HttpPut("{wokrorderId:guid}/repair-tasks")]
+        [HttpPut("{workorderId:guid}/repair-tasks")]
         [Authorize(Policy = nameof(Role.Manager))]
         [ProducesResponseType<NoContentResult>(StatusCodes.Status204NoContent)]
         [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
         [EndpointSummary("Update repair tasks associated with a work order")]
         [EndpointDescription("Update the list of repair tasks associated with a specific work order. Only managers can perform this action.")]
         [EndpointName("UpdateWorkOrderRepairTasks")]
-        public async Task<ActionResult<NoContentResult>> UpdateRepairTasks(Guid wokrorderId, ModifyRepairTasksRequest request, CancellationToken ct)
+        public async Task<ActionResult<NoContentResult>> UpdateRepairTasks(Guid workorderId, ModifyRepairTasksRequest request, CancellationToken ct)
         {
             var updateRepairTasksCommand = new UpdateWorkOrderRepairTasksCommand(
-                                                wokrorderId, request.RepairTasksIds);
+                                                workorderId, request.RepairTasksIds);
             var result = await sender.Send(updateRepairTasksCommand, ct);
             return result.Match(_ => NoContent(), Problem);
         }

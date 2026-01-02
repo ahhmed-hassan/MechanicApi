@@ -2,9 +2,9 @@
 
 namespace MechanicApplication.Features.WorkOrders.Commands.DeleteWorkOrder;
 
-public sealed class DeleteWrokOrderCommandValidator : AbstractValidator<DeleteWorkOrderCommand>
+public sealed class DeleteWorkOrderCommandValidator : AbstractValidator<DeleteWorkOrderCommand>
 {
-    public DeleteWrokOrderCommandValidator()
+    public DeleteWorkOrderCommandValidator()
     {
         RuleFor(x=> x.workOrderId)
             .NotEmpty()

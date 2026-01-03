@@ -2,7 +2,7 @@
 using MechanicApplication.Common.Interfaces;
 using MechanicApplication.Features.WorkOrders.Dtos;
 
-namespace MechanicApplication.Features.WorkOrders.Queries;
+namespace MechanicApplication.Features.WorkOrders.Queries.GetWorkOrderById;
 
 public record GetWorkOrderByIdQuery(Guid id)
     : ICachedQuery<ErrorOr<WorkOrderDTO>>

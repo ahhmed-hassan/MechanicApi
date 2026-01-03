@@ -5,6 +5,7 @@ using MechanicApplication.Common.Constants;
 using MechanicApplication.Features.RepairTasks.Commands.UpdateRepairTask;
 using MechanicApplication.Features.WorkOrders.Commands.AssignLabor;
 using MechanicApplication.Features.WorkOrders.Commands.CreateWorkOrder;
+using MechanicApplication.Features.WorkOrders.Commands.DeleteWorkOrder;
 using MechanicApplication.Features.WorkOrders.Commands.RelocateWorkOrder;
 using MechanicApplication.Features.WorkOrders.Commands.UpdateWorkOrderRepairTasks;
 using MechanicApplication.Features.WorkOrders.Commands.UpdateWorkOrderState;
@@ -107,19 +108,32 @@ namespace MechanicApi.Controllers
             
         }
 
-        [HttpPut("{wokrorderId:guid}/repair-tasks")]
+        [HttpPut("{workorderId:guid}/repair-tasks")]
         [Authorize(Policy = nameof(Role.Manager))]
         [ProducesResponseType<NoContentResult>(StatusCodes.Status204NoContent)]
         [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
         [EndpointSummary("Update repair tasks associated with a work order")]
         [EndpointDescription("Update the list of repair tasks associated with a specific work order. Only managers can perform this action.")]
         [EndpointName("UpdateWorkOrderRepairTasks")]
-        public async Task<ActionResult<NoContentResult>> UpdateRepairTasks(Guid wokrorderId, ModifyRepairTasksRequest request, CancellationToken ct)
+        public async Task<ActionResult<NoContentResult>> UpdateRepairTasks(Guid workorderId, ModifyRepairTasksRequest request, CancellationToken ct)
         {
             var updateRepairTasksCommand = new UpdateWorkOrderRepairTasksCommand(
-                                                wokrorderId, request.RepairTasksIds);
+                                                workorderId, request.RepairTasksIds);
             var result = await sender.Send(updateRepairTasksCommand, ct);
             return result.Match(_ => NoContent(), Problem);
+        }
+        [HttpDelete("{workOrderId:guid}")]
+        [Authorize(Policy = nameof(Role.Manager))]
+        [ProducesResponseType<NoContentResult>(StatusCodes.Status204NoContent)]
+        [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+        [EndpointSummary("Delete a work order")]
+        [EndpointName("DeleteWorkOrder")]
+        [EndpointDescription("Delete a specific work order by its ID. Only managers have the authority to delete work orders.")]
+        public async Task<ActionResult<NoContentResult>> Delete(Guid workOrderId, CancellationToken ct)
+        {
+            var deleteWorkOrderCommand = new DeleteWorkOrderCommand(workOrderId);
+            var result = sender.Send(deleteWorkOrderCommand, ct);
+            return await result.Match(_ => NoContent(), Problem);
         }
         
     }

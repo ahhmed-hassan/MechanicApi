@@ -10,6 +10,7 @@ using MechanicApplication.Features.WorkOrders.Commands.RelocateWorkOrder;
 using MechanicApplication.Features.WorkOrders.Commands.UpdateWorkOrderRepairTasks;
 using MechanicApplication.Features.WorkOrders.Commands.UpdateWorkOrderState;
 using MechanicApplication.Features.WorkOrders.Dtos;
+using MechanicApplication.Features.WorkOrders.Queries.GetWorkOrderById;
 using MechanicContracts.Requests.WorkOrders;
 using MechanicContracts.Shared;
 using MechanicDomain.Identity;
@@ -47,7 +48,7 @@ namespace MechanicApi.Controllers
                 );
             var result = await sender.Send(command, cancellationToken);
             var currentApiVersion = HttpContext.GetRequestedApiVersion()?.ToString();
-            return result.Match( 
+            return result.Match(
                 workOrder => CreatedAtAction(
                     "GetWorkOrderById",
                     new { workOrderId = workOrder.WorkOrderId, apiVersion = currentApiVersion },
@@ -82,7 +83,7 @@ namespace MechanicApi.Controllers
         [EndpointSummary("Assigns a labor to a workorder")]
         [EndpointDescription("assigning some work order (With the same time and spot and everything) to another labor")]
         [EndpointName("AssignLaborToWorkOrder")]
-        
+
         public async Task<ActionResult<Updated>> AssignLabor(Guid workOrderId, AssignLaborRequest request, CancellationToken ct)
         {
             var assignLaborCommand = new AssignLaborCommand(workOrderId, Guid.Parse(request.LaborId));
@@ -99,13 +100,13 @@ namespace MechanicApi.Controllers
         [EndpointSummary("Updates the state of a work order")]
         [EndpointDescription("Updates the state of a work order, such as from 'Scheduled' to 'In Progress' or 'Completed' The due start date should not be of course in the future")]
         [EndpointName("UpdateWorkOrderState")]
-        public async Task<ActionResult<Updated>> UpdateState(Guid workOrderId,UpdateWorkOrderStateRequest request , CancellationToken ct)
+        public async Task<ActionResult<Updated>> UpdateState(Guid workOrderId, UpdateWorkOrderStateRequest request, CancellationToken ct)
         {
             var updateWorkOrderCommand = new UpdateWorkOrderState(workOrderId,
                                                                   (MechanicDomain.WorkOrders.Enums.WorkOrderState)request.State);
             var result = await sender.Send(updateWorkOrderCommand, ct);
-            return result.Match (_ => NoContent(), Problem);
-            
+            return result.Match(_ => NoContent(), Problem);
+
         }
 
         [HttpPut("{workorderId:guid}/repair-tasks")]
@@ -134,6 +135,19 @@ namespace MechanicApi.Controllers
             var deleteWorkOrderCommand = new DeleteWorkOrderCommand(workOrderId);
             var result = sender.Send(deleteWorkOrderCommand, ct);
             return await result.Match(_ => NoContent(), Problem);
+        }
+        [HttpGet("{workOrderId:guid}")]
+        [ProducesResponseType<WorkOrderDTO>(StatusCodes.Status200OK)]
+        [ProducesResponseType<ProblemDetails>(StatusCodes.Status404NotFound)]
+        [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
+        [EndpointSummary("Get work order by ID")]
+        [EndpointDescription("Retrieve detailed information about a specific work order using its unique ID.")]
+        [EndpointName("GetWorkOrderById")]
+        public async Task<ActionResult<WorkOrderDTO>> GetById(Guid workOrderId, CancellationToken ct)
+        {
+            ErrorOr<WorkOrderDTO> result = await sender.Send(
+                new GetWorkOrderByIdQuery(workOrderId));
+            return result.Match(Ok, Problem);
         }
         
     }

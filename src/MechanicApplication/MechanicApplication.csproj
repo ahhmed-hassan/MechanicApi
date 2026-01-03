@@ -7,12 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Features\WorkOrders\Queries\**" />
-    <EmbeddedResource Remove="Features\WorkOrders\Queries\**" />
-    <None Remove="Features\WorkOrders\Queries\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
   </ItemGroup>

@@ -3,6 +3,7 @@ using ErrorOr;
 using MechanicApplication.Common.Interfaces;
 using MechanicApplication.Common.Models;
 using MechanicApplication.Features.WorkOrders.Dtos;
+using MediatR;
 
 namespace MechanicApplication.Features.WorkOrders.Queries.GetWorkOrders;
 
@@ -11,7 +12,7 @@ public sealed record  GetWorkOrdersQuery
     int Page, 
     int PageSize
     )
-    : ICachedQuery<ErrorOr<PageinatedList<WorkOrderListItemDTO>>>
+    : IRequest<ErrorOr<PaginatedList<WorkOrderListItemDTO>>>
 {
     public string CacheKey =>
         $"work-orders:p={Page}:ps={PageSize}"

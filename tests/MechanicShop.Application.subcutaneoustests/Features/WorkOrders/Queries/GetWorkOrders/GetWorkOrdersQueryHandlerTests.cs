@@ -65,8 +65,8 @@ public class GetWorkOrdersQueryHandlerTests(WebAppFactory factory)
         await _dbContext.SaveChangesAsync(default);
 
         var query = new GetWorkOrdersQuery(
-            Page: 1,
-            PageSize: 10);
+            Page: 2,
+            PageSize: 2);
 
         // Act
         var result = await _mediator.Send(query);
@@ -77,13 +77,14 @@ public class GetWorkOrdersQueryHandlerTests(WebAppFactory factory)
 
         var paginatedList = result.Value;
         Assert.Equal(3, paginatedList.TotalCount);
-        Assert.Equal(1, paginatedList.TotalPages);
-        Assert.Equal(1, paginatedList.PageNumber);
-        Assert.Equal(10, paginatedList.PageSize);
-        Assert.Equal(3, paginatedList.Items?.Count);
+        Assert.Equal(2, paginatedList.TotalPages);
+        Assert.Equal(2, paginatedList.PageNumber);
+        Assert.Equal(2, paginatedList.PageSize);
+        Assert.NotNull(paginatedList.Items);
+        Assert.Equal(1, paginatedList.Items?.Count);
 
         // Verify items contain expected data
-        Assert.All(paginatedList.Items!, item =>
+        Assert.All(paginatedList.Items, item =>
         {
             Assert.NotEqual(Guid.Empty, item.WorkOrderId);
             Assert.NotNull(item.Vehicle);
@@ -92,5 +93,5 @@ public class GetWorkOrdersQueryHandlerTests(WebAppFactory factory)
             Assert.NotNull(item.Labor);
             Assert.Single(item.RepairTasks);
         });
-    }
+        }
 }

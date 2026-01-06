@@ -18,7 +18,7 @@ public class GetWorkOrdersQueryHandlerTests(WebAppFactory factory)
     : IntegrationTestBase(factory)
 {
     [Fact]
-    public async Task Handle_WithBasicPagination_ShouldReturnFirstPage()
+    public async Task Handle_WithBasicPagination_ShouldReturnSecondPage()
     {
         // Arrange
         Assert.True(IsEmptyDatabase());

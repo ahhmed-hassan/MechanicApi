@@ -11,7 +11,7 @@ namespace MechanicApplication.Common.Models;
 /// Contains pagination metadata such as page number, page size, total pages, and total item count.
 /// </summary>
 /// <typeparam name="T">The type of items in the list. Must be a class.</typeparam>
-public record PageinatedList<T>(
+public record PaginatedList<T>(
     int PageNumber,
     int PageSize,
     int TotalPages,

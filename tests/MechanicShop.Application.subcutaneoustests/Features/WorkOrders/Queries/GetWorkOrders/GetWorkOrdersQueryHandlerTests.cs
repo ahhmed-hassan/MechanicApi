@@ -94,4 +94,77 @@ public class GetWorkOrdersQueryHandlerTests(WebAppFactory factory)
             Assert.Single(item.RepairTasks);
         });
         }
+
+    [Fact]
+    public async Task Handle_WithStateFilter_ShouldReturnOnlyMatchingState()
+    {
+        // Arrange
+        Assert.True(IsEmptyDatabase());
+
+        var customer = CustomerFactory.CreateCustomer().Value;
+        var vehicle = customer.Vehicles.First();
+        var employee = EmployeeFactory.CreateEmployee().Value;
+        var repairTask = RepairTaskFactory.CreateRepairTask(
+            repairDurationInMinutes: RepairDurationInMinutes.Min60).Value;
+
+        await _dbContext.Customers.AddAsync(customer);
+        await _dbContext.Vehicles.AddAsync(vehicle);
+        await _dbContext.Employees.AddAsync(employee);
+        await _dbContext.RepairTasks.AddAsync(repairTask);
+        await _dbContext.SaveChangesAsync(default);
+
+        var baseTime = DateTimeOffset.UtcNow.Date.AddDays(1).AddHours(10);
+
+        // Create work orders with different states
+        var scheduledWorkOrder = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseTime,
+            laborId: employee.Id,
+            spot: Spot.A,
+            repairTasks: [repairTask]).Value;
+        // scheduledWorkOrder is already in Scheduled state (default)
+
+        var inProgressWorkOrder = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseTime.AddHours(2),
+            laborId: employee.Id,
+            spot: Spot.B,
+            repairTasks: [repairTask]).Value;
+        inProgressWorkOrder.UpdateState(WorkOrderState.InProgress); // Transition to InProgress
+
+        var completedWorkOrder = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseTime.AddHours(4),
+            laborId: employee.Id,
+            spot: Spot.C,
+            repairTasks: [repairTask]).Value;
+        completedWorkOrder.UpdateState(WorkOrderState.InProgress);
+        completedWorkOrder.UpdateState(WorkOrderState.Completed); // Transition to Completed
+
+        await _dbContext.WorkOrders.AddAsync(scheduledWorkOrder);
+        await _dbContext.WorkOrders.AddAsync(inProgressWorkOrder);
+        await _dbContext.WorkOrders.AddAsync(completedWorkOrder);
+        await _dbContext.SaveChangesAsync(default);
+
+        // Query only for InProgress work orders
+        var query = new GetWorkOrdersQuery(
+            Page: 1,
+            PageSize: 10,
+            State: WorkOrderState.InProgress);
+
+        // Act
+        var result = await _mediator.Send(query);
+
+        // Assert
+        Assert.False(result.IsError);
+        Assert.NotNull(result.Value);
+
+        var paginatedList = result.Value;
+        Assert.Equal(1, paginatedList.TotalCount); // Only 1 InProgress work order
+        Assert.Single(paginatedList.Items);
+
+        var item = paginatedList.Items.First();
+        Assert.Equal(inProgressWorkOrder.Id, item.WorkOrderId);
+        Assert.Equal(WorkOrderState.InProgress, item.State);
+    }
 }

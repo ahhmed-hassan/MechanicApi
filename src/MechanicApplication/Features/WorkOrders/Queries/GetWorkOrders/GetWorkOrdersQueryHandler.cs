@@ -3,9 +3,12 @@ using MechanicApplication.Common.Interfaces;
 using MechanicApplication.Common.Models;
 using MechanicApplication.Features.Customers.DTOMappers;
 using MechanicApplication.Features.WorkOrders.Dtos;
+using MechanicDomain.WorkOrders;
+using MechanicDomain.WorkOrders.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Linq.Expressions;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace MechanicApplication.Features.WorkOrders.Queries.GetWorkOrders;
@@ -30,6 +33,7 @@ public sealed class GetWorkOrdersQueryHandler(
                 .ThenInclude(rt => rt.Parts)
             .AsQueryable()
                 ;
+        workOrdersQuery = ApplyFilters(workOrdersQuery, request);
         var count = await workOrdersQuery.CountAsync(cancellationToken: cancellationToken);
 
         var items = await workOrdersQuery
@@ -49,4 +53,22 @@ public sealed class GetWorkOrdersQueryHandler(
 
             
     }
+    private static IQueryable<WorkOrder> ApplyFilters(IQueryable<WorkOrder> query, GetWorkOrdersQuery request)
+    {
+        return query
+            .WhereIf(request.State.HasValue,wo => wo.State == request.State!.Value);
+    }
+}
+
+public static class QueryableWorkorderExtenstions
+{
+    /// <summary>
+    /// Applies a WHERE clause only if the condition is true
+    /// </summary>
+    public static IQueryable<WorkOrder> WhereIf(
+        this IQueryable<WorkOrder> query,
+        bool condition,
+        Expression<Func<WorkOrder, bool>> predicate
+        )
+        => condition ? query.Where(predicate) : query;
 }

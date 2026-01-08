@@ -10,12 +10,13 @@ namespace MechanicApplication.Features.WorkOrders.Queries.GetWorkOrders;
 public sealed record  GetWorkOrdersQuery
     (
     int Page, 
-    int PageSize
-    )
+    int PageSize, 
+    MechanicDomain.WorkOrders.Enums.WorkOrderState? State = null)
     : ICachedQuery<ErrorOr<PaginatedList<WorkOrderListItemDTO>>>
 {
     public string CacheKey =>
-        $"work-orders:p={Page}:ps={PageSize}"
+        $"work-orders:p={Page}:ps={PageSize}" + 
+        $":s={State?.ToString().OrHyphen()}"
         ;
 
     public string[] Tags => [Constants.Cache.WorkOrders.Single]

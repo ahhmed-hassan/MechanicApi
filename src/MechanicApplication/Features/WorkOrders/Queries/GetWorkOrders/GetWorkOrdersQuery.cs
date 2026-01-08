@@ -12,7 +12,7 @@ public sealed record  GetWorkOrdersQuery
     int Page, 
     int PageSize
     )
-    : IRequest<ErrorOr<PaginatedList<WorkOrderListItemDTO>>>
+    : ICachedQuery<ErrorOr<PaginatedList<WorkOrderListItemDTO>>>
 {
     public string CacheKey =>
         $"work-orders:p={Page}:ps={PageSize}"

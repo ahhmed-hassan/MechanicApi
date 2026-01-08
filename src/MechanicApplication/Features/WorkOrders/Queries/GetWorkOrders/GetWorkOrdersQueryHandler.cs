@@ -47,7 +47,6 @@ public sealed class GetWorkOrdersQueryHandler(
             PageNumber : request.Page,
             PageSize : request.PageSize,
             TotalCount : count,
-            TotalPages : (int)Math.Ceiling(count / (double)request.PageSize),
             Items: items
         );
 

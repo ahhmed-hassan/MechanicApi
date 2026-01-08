@@ -14,7 +14,9 @@ namespace MechanicApplication.Common.Models;
 public record PaginatedList<T>(
     int PageNumber,
     int PageSize,
-    int TotalPages,
     int TotalCount,
     IReadOnlyCollection<T>? Items)
-    where T : class;
+    where T : class
+{
+    public int TotalPages  => (int)Math.Ceiling(TotalCount / (double)PageSize);
+}

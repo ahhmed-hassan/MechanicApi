@@ -237,12 +237,12 @@ public class GetWorkOrdersQueryHandlerTests(WebAppFactory factory)
 
         var paginatedList = result.Value;
         Assert.Equal(2, paginatedList.TotalCount); // Only 2 work orders for vehicle1
-        Assert.Equal(2, paginatedList.Items.Count);
+        Assert.Equal(2, paginatedList.Items?.Count);
 
         // Verify all returned items are for vehicle1
-        Assert.All(paginatedList.Items, item =>
+        Assert.All(paginatedList.Items!, item =>
         {
-            Assert.Equal(vehicle1.Id, item.Vehicle.VehicleId);
+            Assert.Equal(vehicle1.Id, item.Vehicle?.VehicleId);
             Assert.Equal(customer1.Name, item.Customer);
         });
     }
@@ -319,10 +319,10 @@ public class GetWorkOrdersQueryHandlerTests(WebAppFactory factory)
 
         var paginatedList = result.Value;
         Assert.Equal(2, paginatedList.TotalCount); // Only 2 work orders for employee1
-        Assert.Equal(2, paginatedList.Items.Count);
+        Assert.Equal(2, paginatedList.Items?.Count);
 
         // Verify all returned items are assigned to employee1
-        Assert.All(paginatedList.Items, item =>
+        Assert.All(paginatedList.Items!, item =>
         {
             Assert.Equal("John Smith", item.Labor);
         });
@@ -390,16 +390,16 @@ public class GetWorkOrdersQueryHandlerTests(WebAppFactory factory)
 
         var paginatedList = result.Value;
         Assert.Equal(2, paginatedList.TotalCount); // Day 3 and Day 5
-        Assert.Equal(2, paginatedList.Items.Count);
+        Assert.Equal(2, paginatedList.Items?.Count);
 
         // Verify all returned items start on or after Day 3
-        Assert.All(paginatedList.Items, item =>
+        Assert.All(paginatedList.Items!, item =>
         {
             Assert.True(item.StartAtUtc >= baseDate.AddDays(3));
         });
 
         // Verify Day 1 is NOT included
-        Assert.DoesNotContain(paginatedList.Items, item => item.WorkOrderId == workOrderDay1.Id);
+        Assert.DoesNotContain(paginatedList.Items!, item => item.WorkOrderId == workOrderDay1.Id);
     }
 
     [Fact]
@@ -464,16 +464,16 @@ public class GetWorkOrdersQueryHandlerTests(WebAppFactory factory)
 
         var paginatedList = result.Value;
         Assert.Equal(2, paginatedList.TotalCount); // Day 1 and Day 3
-        Assert.Equal(2, paginatedList.Items.Count);
+        Assert.Equal(2, paginatedList.Items?.Count);
 
         // Verify all returned items start on or before Day 3
-        Assert.All(paginatedList.Items, item =>
+        Assert.All(paginatedList.Items!, item =>
         {
             Assert.True(item.StartAtUtc <= baseDate.AddDays(3).AddHours(23).AddMinutes(59));
         });
 
         // Verify Day 5 is NOT included
-        Assert.DoesNotContain(paginatedList.Items, item => item.WorkOrderId == workOrderDay5.Id);
+        Assert.DoesNotContain(paginatedList.Items!, item => item.WorkOrderId == workOrderDay5.Id);
     }
     [Fact]
     public async Task Handle_WithEndDateFrom_ShouldReturnOnlyWorkOrdersEndingAfter()

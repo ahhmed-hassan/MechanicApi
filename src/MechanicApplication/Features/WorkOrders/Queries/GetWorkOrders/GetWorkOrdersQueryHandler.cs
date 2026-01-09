@@ -58,6 +58,8 @@ public sealed class GetWorkOrdersQueryHandler(
             .WhereIf(request.State.HasValue,wo => wo.State == request.State!.Value)
             .WhereIf(request.VehicleId.GetValueOrDefault(Guid.Empty) != Guid.Empty 
                        , wo => wo.VehicleId == request.VehicleId)
+            .WhereIf(request.LaborId.GetValueOrDefault(Guid.Empty) != Guid.Empty
+                       , wo => wo.LaborId == request.LaborId)
             ;
     }
 }

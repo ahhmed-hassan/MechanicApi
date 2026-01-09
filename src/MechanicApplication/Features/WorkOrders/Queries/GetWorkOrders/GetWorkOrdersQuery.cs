@@ -12,13 +12,15 @@ public sealed record  GetWorkOrdersQuery
     int Page, 
     int PageSize, 
     MechanicDomain.WorkOrders.Enums.WorkOrderState? State = null,
-    Guid? VehicleId = null)
+    Guid? VehicleId = null,
+    Guid? LaborId = null)
     : ICachedQuery<ErrorOr<PaginatedList<WorkOrderListItemDTO>>>
 {
     public string CacheKey =>
         $"work-orders:p={Page}:ps={PageSize}" + 
         $":s={State?.ToString().OrHyphen()}"
         + $":v={VehicleId?.ToString().OrHyphen()}"
+        + $":l={LaborId?.ToString().OrHyphen()}"
 
         ;
 

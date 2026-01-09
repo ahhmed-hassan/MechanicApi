@@ -638,4 +638,83 @@ public class GetWorkOrdersQueryHandlerTests(WebAppFactory factory)
         // Verify 17:00 work order is NOT included
         Assert.DoesNotContain(paginatedList.Items!, item => item.WorkOrderId == workOrderEnds17.Id);
     }
+
+    [Fact]
+    public async Task Handle_WithSpotFilter_ShouldReturnOnlyMatchingSpot()
+    {
+        // Arrange
+        Assert.True(IsEmptyDatabase());
+
+        var customer = CustomerFactory.CreateCustomer().Value;
+        var vehicle = customer.Vehicles.First();
+        var employee = EmployeeFactory.CreateEmployee().Value;
+        var repairTask = RepairTaskFactory.CreateRepairTask(
+            repairDurationInMinutes: RepairDurationInMinutes.Min60).Value;
+
+        await _dbContext.Customers.AddAsync(customer);
+        await _dbContext.Vehicles.AddAsync(vehicle);
+        await _dbContext.Employees.AddAsync(employee);
+        await _dbContext.RepairTasks.AddAsync(repairTask);
+        await _dbContext.SaveChangesAsync(default);
+
+        var baseTime = DateTimeOffset.UtcNow.Date.AddDays(1).AddHours(10);
+
+        // Create work orders in different spots
+        var workOrderSpotA = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseTime,
+            laborId: employee.Id,
+            spot: Spot.A,
+            repairTasks: [repairTask]).Value;
+
+        var workOrderSpotB1 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseTime.AddHours(2),
+            laborId: employee.Id,
+            spot: Spot.B,
+            repairTasks: [repairTask]).Value;
+
+        var workOrderSpotB2 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseTime.AddHours(4),
+            laborId: employee.Id,
+            spot: Spot.B,
+            repairTasks: [repairTask]).Value;
+
+        var workOrderSpotC = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseTime.AddHours(6),
+            laborId: employee.Id,
+            spot: Spot.C,
+            repairTasks: [repairTask]).Value;
+
+        await _dbContext.WorkOrders.AddAsync(workOrderSpotA);
+        await _dbContext.WorkOrders.AddAsync(workOrderSpotB1);
+        await _dbContext.WorkOrders.AddAsync(workOrderSpotB2);
+        await _dbContext.WorkOrders.AddAsync(workOrderSpotC);
+        await _dbContext.SaveChangesAsync(default);
+
+        // Query only for Spot B
+        var query = new GetWorkOrdersQuery(
+            Page: 1,
+            PageSize: 10,
+            Spot: Spot.B);
+
+        // Act
+        var result = await _mediator.Send(query);
+
+        // Assert
+        Assert.False(result.IsError);
+        Assert.NotNull(result.Value);
+
+        var paginatedList = result.Value;
+        Assert.Equal(2, paginatedList.TotalCount); // Only 2 work orders at Spot B
+        Assert.Equal(2, paginatedList.Items?.Count);
+
+        // Verify all returned items are at Spot B
+        Assert.All(paginatedList.Items!, item =>
+        {
+            Assert.Equal(Spot.B, item.Spot);
+        });
+    }
 }

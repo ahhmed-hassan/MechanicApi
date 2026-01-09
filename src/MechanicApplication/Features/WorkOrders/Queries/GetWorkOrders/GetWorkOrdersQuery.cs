@@ -17,7 +17,8 @@ public sealed record  GetWorkOrdersQuery
     DateTime? StartDateFrom = null,
     DateTime? StartDateTo = null,
     DateTime? EndDateFrom = null,
-    DateTime? EndDateTo = null)
+    DateTime? EndDateTo = null,
+    MechanicDomain.WorkOrders.Enums.Spot? Spot = null)
     : ICachedQuery<ErrorOr<PaginatedList<WorkOrderListItemDTO>>>
 {
     public string CacheKey =>
@@ -29,6 +30,7 @@ public sealed record  GetWorkOrdersQuery
         + $":sdt={StartDateTo?.ToString("yyyyMMdd").OrHyphen()}"
         + $":edf={EndDateFrom?.ToString("yyyyMMdd").OrHyphen()}"
         + $":edt={EndDateTo?.ToString("yyyyMMdd").OrHyphen()}"
+        + $":sp={Spot?.ToString().OrHyphen()}"
 
         ;
 

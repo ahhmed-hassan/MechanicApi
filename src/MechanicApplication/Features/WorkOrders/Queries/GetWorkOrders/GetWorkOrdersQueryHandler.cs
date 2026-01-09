@@ -60,6 +60,10 @@ public sealed class GetWorkOrdersQueryHandler(
                        , wo => wo.VehicleId == request.VehicleId)
             .WhereIf(request.LaborId.GetValueOrDefault(Guid.Empty) != Guid.Empty
                        , wo => wo.LaborId == request.LaborId)
+            .WhereIf(request.StartDateFrom.HasValue, 
+                wo => wo.StartAtUtc >= request.StartDateFrom!.Value.ToUniversalTime())
+            .WhereIf(request.StartDateTo.HasValue,
+                wo => wo.StartAtUtc <= request.StartDateTo!.Value.ToUniversalTime())
             ;
     }
 }

@@ -13,7 +13,9 @@ public sealed record  GetWorkOrdersQuery
     int PageSize, 
     MechanicDomain.WorkOrders.Enums.WorkOrderState? State = null,
     Guid? VehicleId = null,
-    Guid? LaborId = null)
+    Guid? LaborId = null,
+    DateTime? StartDateFrom = null,
+    DateTime? StartDateTo = null)
     : ICachedQuery<ErrorOr<PaginatedList<WorkOrderListItemDTO>>>
 {
     public string CacheKey =>
@@ -21,6 +23,8 @@ public sealed record  GetWorkOrdersQuery
         $":s={State?.ToString().OrHyphen()}"
         + $":v={VehicleId?.ToString().OrHyphen()}"
         + $":l={LaborId?.ToString().OrHyphen()}"
+        + $":sdf={StartDateFrom?.ToString("yyyyMMdd").OrHyphen()}"
+        + $":sdt={StartDateTo?.ToString("yyyyMMdd").OrHyphen()}"
 
         ;
 

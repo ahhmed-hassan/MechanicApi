@@ -327,4 +327,152 @@ public class GetWorkOrdersQueryHandlerTests(WebAppFactory factory)
             Assert.Equal("John Smith", item.Labor);
         });
     }
+
+    [Fact]
+    public async Task Handle_WithStartDateFrom_ShouldReturnOnlyWorkOrdersStartingAfter()
+    {
+        // Arrange
+        Assert.True(IsEmptyDatabase());
+
+        var customer = CustomerFactory.CreateCustomer().Value;
+        var vehicle = customer.Vehicles.First();
+        var employee = EmployeeFactory.CreateEmployee().Value;
+        var repairTask = RepairTaskFactory.CreateRepairTask(
+            repairDurationInMinutes: RepairDurationInMinutes.Min60).Value;
+
+        await _dbContext.Customers.AddAsync(customer);
+        await _dbContext.Vehicles.AddAsync(vehicle);
+        await _dbContext.Employees.AddAsync(employee);
+        await _dbContext.RepairTasks.AddAsync(repairTask);
+        await _dbContext.SaveChangesAsync(default);
+
+        var baseDate = DateTimeOffset.UtcNow.Date;
+
+        // Create work orders on different dates
+        var workOrderDay1 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseDate.AddDays(1).AddHours(10),  // Day 1
+            laborId: employee.Id,
+            spot: Spot.A,
+            repairTasks: [repairTask]).Value;
+
+        var workOrderDay3 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseDate.AddDays(3).AddHours(10),  // Day 3
+            laborId: employee.Id,
+            spot: Spot.B,
+            repairTasks: [repairTask]).Value;
+
+        var workOrderDay5 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseDate.AddDays(5).AddHours(10),  // Day 5
+            laborId: employee.Id,
+            spot: Spot.C,
+            repairTasks: [repairTask]).Value;
+
+        await _dbContext.WorkOrders.AddAsync(workOrderDay1);
+        await _dbContext.WorkOrders.AddAsync(workOrderDay3);
+        await _dbContext.WorkOrders.AddAsync(workOrderDay5);
+        await _dbContext.SaveChangesAsync(default);
+
+        // Query for work orders starting from Day 3 onwards
+        var query = new GetWorkOrdersQuery(
+            Page: 1,
+            PageSize: 10,
+            StartDateFrom: baseDate.AddDays(3));
+
+        // Act
+        var result = await _mediator.Send(query);
+
+        // Assert
+        Assert.False(result.IsError);
+        Assert.NotNull(result.Value);
+
+        var paginatedList = result.Value;
+        Assert.Equal(2, paginatedList.TotalCount); // Day 3 and Day 5
+        Assert.Equal(2, paginatedList.Items.Count);
+
+        // Verify all returned items start on or after Day 3
+        Assert.All(paginatedList.Items, item =>
+        {
+            Assert.True(item.StartAtUtc >= baseDate.AddDays(3));
+        });
+
+        // Verify Day 1 is NOT included
+        Assert.DoesNotContain(paginatedList.Items, item => item.WorkOrderId == workOrderDay1.Id);
+    }
+
+    [Fact]
+    public async Task Handle_WithStartDateTo_ShouldReturnOnlyWorkOrdersStartingBefore()
+    {
+        // Arrange
+        Assert.True(IsEmptyDatabase());
+
+        var customer = CustomerFactory.CreateCustomer().Value;
+        var vehicle = customer.Vehicles.First();
+        var employee = EmployeeFactory.CreateEmployee().Value;
+        var repairTask = RepairTaskFactory.CreateRepairTask(
+            repairDurationInMinutes: RepairDurationInMinutes.Min60).Value;
+
+        await _dbContext.Customers.AddAsync(customer);
+        await _dbContext.Vehicles.AddAsync(vehicle);
+        await _dbContext.Employees.AddAsync(employee);
+        await _dbContext.RepairTasks.AddAsync(repairTask);
+        await _dbContext.SaveChangesAsync(default);
+
+        var baseDate = DateTimeOffset.UtcNow.Date;
+
+        // Create work orders on different dates
+        var workOrderDay1 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseDate.AddDays(1).AddHours(10),  // Day 1
+            laborId: employee.Id,
+            spot: Spot.A,
+            repairTasks: [repairTask]).Value;
+
+        var workOrderDay3 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseDate.AddDays(3).AddHours(10),  // Day 3
+            laborId: employee.Id,
+            spot: Spot.B,
+            repairTasks: [repairTask]).Value;
+
+        var workOrderDay5 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseDate.AddDays(5).AddHours(10),  // Day 5
+            laborId: employee.Id,
+            spot: Spot.C,
+            repairTasks: [repairTask]).Value;
+
+        await _dbContext.WorkOrders.AddAsync(workOrderDay1);
+        await _dbContext.WorkOrders.AddAsync(workOrderDay3);
+        await _dbContext.WorkOrders.AddAsync(workOrderDay5);
+        await _dbContext.SaveChangesAsync(default);
+
+        // Query for work orders starting up to Day 3
+        var query = new GetWorkOrdersQuery(
+            Page: 1,
+            PageSize: 10,
+            StartDateTo: baseDate.AddDays(3).AddHours(23).AddMinutes(59));  // End of Day 3
+
+        // Act
+        var result = await _mediator.Send(query);
+
+        // Assert
+        Assert.False(result.IsError);
+        Assert.NotNull(result.Value);
+
+        var paginatedList = result.Value;
+        Assert.Equal(2, paginatedList.TotalCount); // Day 1 and Day 3
+        Assert.Equal(2, paginatedList.Items.Count);
+
+        // Verify all returned items start on or before Day 3
+        Assert.All(paginatedList.Items, item =>
+        {
+            Assert.True(item.StartAtUtc <= baseDate.AddDays(3).AddHours(23).AddMinutes(59));
+        });
+
+        // Verify Day 5 is NOT included
+        Assert.DoesNotContain(paginatedList.Items, item => item.WorkOrderId == workOrderDay5.Id);
+    }
 }

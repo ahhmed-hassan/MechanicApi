@@ -36,6 +36,7 @@ public sealed class GetWorkOrdersQueryHandler(
                 ;
         workOrdersQuery = ApplyFilters(workOrdersQuery, request);
         workOrdersQuery = ApplySorting(workOrdersQuery, request.SortColumn, request.SortDirection);
+        workOrdersQuery = ApplySearchTerm(workOrdersQuery, request.SearchTerm);
         var count = await workOrdersQuery.CountAsync(cancellationToken: cancellationToken);
 
         var items = await workOrdersQuery
@@ -122,6 +123,35 @@ public sealed class GetWorkOrdersQueryHandler(
         return sortDirection == SortDirection.Asc  
          ? query.OrderBy(keySelector)
          : query.OrderByDescending(keySelector);
+    }
+
+    private static IQueryable<WorkOrder> ApplySearchTerm(IQueryable<WorkOrder> query,
+        string? searchTerm)
+    {
+        if (string.IsNullOrWhiteSpace(searchTerm))
+            return query;
+
+        searchTerm = searchTerm.Trim().ToLower();
+        return query
+         .Where(wo =>
+            wo.Vehicle!.LicensePlate.ToLower().Contains(searchTerm) ||
+            wo.Vehicle!.Customer!.Name!.ToLower().Contains(searchTerm) ||
+            wo.Vehicle.Make.ToString().ToLower().Contains(searchTerm) ||
+            wo.Vehicle.Model.ToLower().Contains(searchTerm) ||
+            (wo.Labor != null &&
+                (wo.Labor.FirstName.ToLower().Contains(searchTerm) ||
+                 wo.Labor.LastName.ToLower().Contains(searchTerm)
+                )
+             )
+              || wo.RepairTasks.Any(rt => rt.Name.ToLower().Contains(searchTerm))
+              || wo.Id.ToString().ToLower().Contains(searchTerm)
+         )
+
+
+              ;
+              
+
+        
     }
 }
 

@@ -20,8 +20,8 @@ public sealed record  GetWorkOrdersQuery
     DateTime? EndDateTo = null,
     MechanicDomain.WorkOrders.Enums.Spot? Spot = null, 
     WorkOrderSortColumn SortColumn = WorkOrderSortColumn.CreatedAt,
-    SortDirection SortDirection = SortDirection.Desc
-    )
+    SortDirection SortDirection = SortDirection.Desc,
+    string? SearchTerm = null)
     : ICachedQuery<ErrorOr<PaginatedList<WorkOrderListItemDTO>>>
 {
     public string CacheKey =>
@@ -34,6 +34,9 @@ public sealed record  GetWorkOrdersQuery
         + $":edf={EndDateFrom?.ToString("yyyyMMdd").OrHyphen()}"
         + $":edt={EndDateTo?.ToString("yyyyMMdd").OrHyphen()}"
         + $":sp={Spot?.ToString().OrHyphen()}"
+        + $":sc={SortColumn}"
+        + $":sd={SortDirection}"
+        + $":st={SearchTerm.OrHyphen()}"
 
         ;
 

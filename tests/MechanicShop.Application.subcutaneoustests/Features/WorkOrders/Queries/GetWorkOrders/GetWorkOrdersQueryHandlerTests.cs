@@ -953,4 +953,360 @@ public class GetWorkOrdersQueryHandlerTests(WebAppFactory factory)
         //Assert.True(items[2].State <= items[3].State);
 
     }
+
+    [Fact]
+    public async Task Handle_WithSearchTermForVehicleMake_ShouldReturnMatchingWorkOrders()
+    {
+        // Arrange
+        Assert.True(IsEmptyDatabase());
+
+        var vehicle1 = VehicleFactory.CreateVehicle(make: "Honda", model: "Accord").Value;
+        var vehicle2 = VehicleFactory.CreateVehicle(make: "Toyota", model: "Camry").Value;
+        var vehicle3 = VehicleFactory.CreateVehicle(make: "Honda", model: "Civic").Value;
+
+        var customer = CustomerFactory.CreateCustomer(vehicles: [vehicle1, vehicle2, vehicle3]).Value;
+        var employee = EmployeeFactory.CreateEmployee().Value;
+        var repairTask = RepairTaskFactory.CreateRepairTask(
+            repairDurationInMinutes: RepairDurationInMinutes.Min60).Value;
+
+        await _dbContext.Customers.AddAsync(customer);
+        await _dbContext.Vehicles.AddAsync(vehicle1);
+        await _dbContext.Vehicles.AddAsync(vehicle2);
+        await _dbContext.Vehicles.AddAsync(vehicle3);
+        await _dbContext.Employees.AddAsync(employee);
+        await _dbContext.RepairTasks.AddAsync(repairTask);
+        await _dbContext.SaveChangesAsync(default);
+
+        var baseTime = DateTimeOffset.UtcNow.Date.AddDays(1).AddHours(10);
+
+        var workOrder1 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle1.Id,
+            startAt: baseTime,
+            laborId: employee.Id,
+            spot: Spot.A,
+            repairTasks: [repairTask]).Value;
+
+        var workOrder2 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle2.Id,
+            startAt: baseTime.AddHours(2),
+            laborId: employee.Id,
+            spot: Spot.B,
+            repairTasks: [repairTask]).Value;
+
+        var workOrder3 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle3.Id,
+            startAt: baseTime.AddHours(4),
+            laborId: employee.Id,
+            spot: Spot.C,
+            repairTasks: [repairTask]).Value;
+
+        await _dbContext.WorkOrders.AddAsync(workOrder1);
+        await _dbContext.WorkOrders.AddAsync(workOrder2);
+        await _dbContext.WorkOrders.AddAsync(workOrder3);
+        await _dbContext.SaveChangesAsync(default);
+
+        // Search for "Honda" - should return 2 work orders
+        var query = new GetWorkOrdersQuery(
+            Page: 1,
+            PageSize: 10,
+            SearchTerm: "Honda");
+
+        // Act
+        var result = await _mediator.Send(query);
+
+        // Assert
+        Assert.False(result.IsError);
+        Assert.NotNull(result.Value);
+
+        var items = result.Value.Items.ToList();
+        Assert.Equal(2, items.Count); // Only Honda vehicles
+
+        Assert.All(items, item =>
+        {
+            Assert.Equal("Honda", item.Vehicle.Make);
+        });
+    }
+
+    [Fact]
+    public async Task Handle_WithSearchTermForVehicleModel_ShouldReturnMatchingWorkOrders()
+    {
+        // Arrange
+        Assert.True(IsEmptyDatabase());
+
+        var vehicle1 = VehicleFactory.CreateVehicle(make: "Honda", model: "Accord").Value;
+        var vehicle2 = VehicleFactory.CreateVehicle(make: "Toyota", model: "Camry").Value;
+        var vehicle3 = VehicleFactory.CreateVehicle(make: "Nissan", model: "Accord").Value;
+
+        var customer = CustomerFactory.CreateCustomer(vehicles: [vehicle1, vehicle2, vehicle3]).Value;
+        var employee = EmployeeFactory.CreateEmployee().Value;
+        var repairTask = RepairTaskFactory.CreateRepairTask(
+            repairDurationInMinutes: RepairDurationInMinutes.Min60).Value;
+
+        await _dbContext.Customers.AddAsync(customer);
+        await _dbContext.Vehicles.AddAsync(vehicle1);
+        await _dbContext.Vehicles.AddAsync(vehicle2);
+        await _dbContext.Vehicles.AddAsync(vehicle3);
+        await _dbContext.Employees.AddAsync(employee);
+        await _dbContext.RepairTasks.AddAsync(repairTask);
+        await _dbContext.SaveChangesAsync(default);
+
+        var baseTime = DateTimeOffset.UtcNow.Date.AddDays(1).AddHours(10);
+
+        var workOrder1 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle1.Id,
+            startAt: baseTime,
+            laborId: employee.Id,
+            spot: Spot.A,
+            repairTasks: [repairTask]).Value;
+
+        var workOrder2 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle2.Id,
+            startAt: baseTime.AddHours(2),
+            laborId: employee.Id,
+            spot: Spot.B,
+            repairTasks: [repairTask]).Value;
+
+        var workOrder3 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle3.Id,
+            startAt: baseTime.AddHours(4),
+            laborId: employee.Id,
+            spot: Spot.C,
+            repairTasks: [repairTask]).Value;
+
+        await _dbContext.WorkOrders.AddAsync(workOrder1);
+        await _dbContext.WorkOrders.AddAsync(workOrder2);
+        await _dbContext.WorkOrders.AddAsync(workOrder3);
+        await _dbContext.SaveChangesAsync(default);
+
+        // Search for "Accord" model - should return 2 work orders
+        var query = new GetWorkOrdersQuery(
+            Page: 1,
+            PageSize: 10,
+            SearchTerm: "Accord");
+
+        // Act
+        var result = await _mediator.Send(query);
+
+        // Assert
+        Assert.False(result.IsError);
+        Assert.NotNull(result.Value);
+
+        var items = result.Value.Items.ToList();
+        Assert.Equal(2, items.Count); // Both Accord models
+
+        Assert.All(items, item =>
+        {
+            Assert.Equal("Accord", item.Vehicle.Model);
+        });
+    }
+
+    [Fact]
+    public async Task Handle_WithSearchTermForLaborName_ShouldReturnMatchingWorkOrders()
+    {
+        // Arrange
+        Assert.True(IsEmptyDatabase());
+
+        var customer = CustomerFactory.CreateCustomer().Value;
+        var vehicle = customer.Vehicles.First();
+
+        var employee1 = EmployeeFactory.CreateEmployee(
+            firstName: "John",
+            lastName: "Smith").Value;
+        var employee2 = EmployeeFactory.CreateEmployee(
+            firstName: "Jane",
+            lastName: "Doe").Value;
+        var employee3 = EmployeeFactory.CreateEmployee(
+            firstName: "Bob",
+            lastName: "Smith").Value;
+
+        var repairTask = RepairTaskFactory.CreateRepairTask(
+            repairDurationInMinutes: RepairDurationInMinutes.Min60).Value;
+
+        await _dbContext.Customers.AddAsync(customer);
+        await _dbContext.Vehicles.AddAsync(vehicle);
+        await _dbContext.Employees.AddAsync(employee1);
+        await _dbContext.Employees.AddAsync(employee2);
+        await _dbContext.Employees.AddAsync(employee3);
+        await _dbContext.RepairTasks.AddAsync(repairTask);
+        await _dbContext.SaveChangesAsync(default);
+
+        var baseTime = DateTimeOffset.UtcNow.Date.AddDays(1).AddHours(10);
+
+        var workOrder1 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseTime,
+            laborId: employee1.Id,
+            spot: Spot.A,
+            repairTasks: [repairTask]).Value;
+
+        var workOrder2 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseTime.AddHours(2),
+            laborId: employee2.Id,
+            spot: Spot.B,
+            repairTasks: [repairTask]).Value;
+
+        var workOrder3 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseTime.AddHours(4),
+            laborId: employee3.Id,
+            spot: Spot.C,
+            repairTasks: [repairTask]).Value;
+
+        await _dbContext.WorkOrders.AddAsync(workOrder1);
+        await _dbContext.WorkOrders.AddAsync(workOrder2);
+        await _dbContext.WorkOrders.AddAsync(workOrder3);
+        await _dbContext.SaveChangesAsync(default);
+
+        // Search for "Smith" - should return 2 work orders
+        var query = new GetWorkOrdersQuery(
+            Page: 1,
+            PageSize: 10,
+            SearchTerm: "Smith");
+
+        // Act
+        var result = await _mediator.Send(query);
+
+        // Assert
+        Assert.False(result.IsError);
+        Assert.NotNull(result.Value);
+
+        var items = result.Value.Items.ToList();
+        Assert.Equal(2, items.Count); // John Smith and Bob Smith
+
+        Assert.All(items, item =>
+        {
+            Assert.Contains("Smith", item.Labor);
+        });
+    }
+
+    [Fact]
+    public async Task Handle_WithSearchTermForRepairTaskName_ShouldReturnMatchingWorkOrders()
+    {
+        // Arrange
+        Assert.True(IsEmptyDatabase());
+
+        var customer = CustomerFactory.CreateCustomer().Value;
+        var vehicle = customer.Vehicles.First();
+        var employee = EmployeeFactory.CreateEmployee().Value;
+
+        var brakeRepair = RepairTaskFactory.CreateRepairTask(
+            name: "Brake Inspection",
+            repairDurationInMinutes: RepairDurationInMinutes.Min60).Value;
+        var oilChange = RepairTaskFactory.CreateRepairTask(
+            name: "Oil Change",
+            repairDurationInMinutes: RepairDurationInMinutes.Min30).Value;
+        var engineRepair = RepairTaskFactory.CreateRepairTask(
+            name: "Engine Overhaul",
+            repairDurationInMinutes: RepairDurationInMinutes.Min180).Value;
+
+        await _dbContext.Customers.AddAsync(customer);
+        await _dbContext.Vehicles.AddAsync(vehicle);
+        await _dbContext.Employees.AddAsync(employee);
+        await _dbContext.RepairTasks.AddAsync(brakeRepair);
+        await _dbContext.RepairTasks.AddAsync(oilChange);
+        await _dbContext.RepairTasks.AddAsync(engineRepair);
+        await _dbContext.SaveChangesAsync(default);
+
+        var baseTime = DateTimeOffset.UtcNow.Date.AddDays(1).AddHours(10);
+
+        var workOrder1 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseTime,
+            laborId: employee.Id,
+            spot: Spot.A,
+            repairTasks: [brakeRepair]).Value;
+
+        var workOrder2 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseTime.AddHours(2),
+            laborId: employee.Id,
+            spot: Spot.B,
+            repairTasks: [oilChange]).Value;
+
+        var workOrder3 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseTime.AddHours(4),
+            laborId: employee.Id,
+            spot: Spot.C,
+            repairTasks: [engineRepair]).Value;
+
+        await _dbContext.WorkOrders.AddAsync(workOrder1);
+        await _dbContext.WorkOrders.AddAsync(workOrder2);
+        await _dbContext.WorkOrders.AddAsync(workOrder3);
+        await _dbContext.SaveChangesAsync(default);
+
+        // Search for "Brake" - should return 1 work order
+        var query = new GetWorkOrdersQuery(
+            Page: 1,
+            PageSize: 10,
+            SearchTerm: "Brake");
+
+        // Act
+        var result = await _mediator.Send(query);
+
+        // Assert
+        Assert.False(result.IsError);
+        Assert.NotNull(result.Value);
+
+        var items = result.Value.Items.ToList();
+        Assert.Single(items);
+
+        Assert.Contains("Brake Inspection", items[0].RepairTasks);
+    }
+
+    [Fact]
+    public async Task Handle_WithSearchTermCaseInsensitive_ShouldReturnMatchingWorkOrders()
+    {
+        // Arrange
+        Assert.True(IsEmptyDatabase());
+
+        var vehicle = VehicleFactory.CreateVehicle(make: "Honda", model: "Civic").Value;
+        var customer = CustomerFactory.CreateCustomer(vehicles: [vehicle]).Value;
+        var employee = EmployeeFactory.CreateEmployee().Value;
+        var repairTask = RepairTaskFactory.CreateRepairTask(
+            repairDurationInMinutes: RepairDurationInMinutes.Min60).Value;
+
+        await _dbContext.Customers.AddAsync(customer);
+        await _dbContext.Vehicles.AddAsync(vehicle);
+        await _dbContext.Employees.AddAsync(employee);
+        await _dbContext.RepairTasks.AddAsync(repairTask);
+        await _dbContext.SaveChangesAsync(default);
+
+        var baseTime = DateTimeOffset.UtcNow.Date.AddDays(1).AddHours(10);
+
+        var workOrder = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseTime,
+            laborId: employee.Id,
+            spot: Spot.A,
+            repairTasks: [repairTask]).Value;
+
+        await _dbContext.WorkOrders.AddAsync(workOrder);
+        await _dbContext.SaveChangesAsync(default);
+
+        // Search with different cases - all should match
+        var queries = new[]
+        {
+        "honda",
+        "HONDA",
+        "HoNdA",
+        "HOnda"
+    };
+
+        foreach (var searchTerm in queries)
+        {
+            var query = new GetWorkOrdersQuery(
+                Page: 1,
+                PageSize: 10,
+                SearchTerm: searchTerm);
+
+            // Act
+            var result = await _mediator.Send(query);
+
+            // Assert
+            Assert.False(result.IsError);
+            Assert.Single(result.Value.Items);
+        }
+    }
 }

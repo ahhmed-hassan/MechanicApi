@@ -15,7 +15,9 @@ public sealed record  GetWorkOrdersQuery
     Guid? VehicleId = null,
     Guid? LaborId = null,
     DateTime? StartDateFrom = null,
-    DateTime? StartDateTo = null)
+    DateTime? StartDateTo = null,
+    DateTime? EndDateFrom = null,
+    DateTime? EndDateTo = null)
     : ICachedQuery<ErrorOr<PaginatedList<WorkOrderListItemDTO>>>
 {
     public string CacheKey =>
@@ -25,6 +27,8 @@ public sealed record  GetWorkOrdersQuery
         + $":l={LaborId?.ToString().OrHyphen()}"
         + $":sdf={StartDateFrom?.ToString("yyyyMMdd").OrHyphen()}"
         + $":sdt={StartDateTo?.ToString("yyyyMMdd").OrHyphen()}"
+        + $":edf={EndDateFrom?.ToString("yyyyMMdd").OrHyphen()}"
+        + $":edt={EndDateTo?.ToString("yyyyMMdd").OrHyphen()}"
 
         ;
 

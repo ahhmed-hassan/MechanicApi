@@ -93,7 +93,7 @@ public class GetWorkOrdersQueryHandlerTests(WebAppFactory factory)
             Assert.NotNull(item.Labor);
             Assert.Single(item.RepairTasks);
         });
-        }
+    }
 
     [Fact]
     public async Task Handle_WithStateFilter_ShouldReturnOnlyMatchingState()
@@ -474,5 +474,168 @@ public class GetWorkOrdersQueryHandlerTests(WebAppFactory factory)
 
         // Verify Day 5 is NOT included
         Assert.DoesNotContain(paginatedList.Items, item => item.WorkOrderId == workOrderDay5.Id);
+    }
+    [Fact]
+    public async Task Handle_WithEndDateFrom_ShouldReturnOnlyWorkOrdersEndingAfter()
+    {
+        // Arrange
+        Assert.True(IsEmptyDatabase());
+
+        var customer = CustomerFactory.CreateCustomer().Value;
+        var vehicle = customer.Vehicles.First();
+        var employee = EmployeeFactory.CreateEmployee().Value;
+
+        // Different duration tasks to create different end times
+        var shortTask = RepairTaskFactory.CreateRepairTask(
+            repairDurationInMinutes: RepairDurationInMinutes.Min60).Value;  // 1 hour
+        var longTask = RepairTaskFactory.CreateRepairTask(
+            repairDurationInMinutes: RepairDurationInMinutes.Min180).Value; // 3 hours
+
+        await _dbContext.Customers.AddAsync(customer);
+        await _dbContext.Vehicles.AddAsync(vehicle);
+        await _dbContext.Employees.AddAsync(employee);
+        await _dbContext.RepairTasks.AddAsync(shortTask);
+        await _dbContext.RepairTasks.AddAsync(longTask);
+        await _dbContext.SaveChangesAsync(default);
+
+        var baseDate = DateTimeOffset.UtcNow.Date.AddDays(1).AddHours(10);
+
+        // Create work orders with different end times
+        // WorkOrder 1: 10:00 - 11:00 (ends at 11:00)
+        var workOrderEnds11 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseDate,
+            laborId: employee.Id,
+            spot: Spot.A,
+            repairTasks: [shortTask]).Value;
+
+        // WorkOrder 2: 12:00 - 13:00 (ends at 13:00)
+        var workOrderEnds13 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseDate.AddHours(2),
+            laborId: employee.Id,
+            spot: Spot.B,
+            repairTasks: [shortTask]).Value;
+
+        // WorkOrder 3: 14:00 - 17:00 (ends at 17:00)
+        var workOrderEnds17 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseDate.AddHours(4),
+            laborId: employee.Id,
+            spot: Spot.C,
+            repairTasks: [longTask]).Value;
+
+        await _dbContext.WorkOrders.AddAsync(workOrderEnds11);
+        await _dbContext.WorkOrders.AddAsync(workOrderEnds13);
+        await _dbContext.WorkOrders.AddAsync(workOrderEnds17);
+        await _dbContext.SaveChangesAsync(default);
+
+        // Query for work orders ending at 13:00 or later
+        var query = new GetWorkOrdersQuery(
+            Page: 1,
+            PageSize: 10,
+            EndDateFrom: baseDate.AddHours(3));  // 13:00
+
+        // Act
+        var result = await _mediator.Send(query);
+
+        // Assert
+        Assert.False(result.IsError);
+        Assert.NotNull(result.Value);
+
+        var paginatedList = result.Value;
+        Assert.Equal(2, paginatedList.TotalCount); // Ends at 13:00 and 17:00
+        Assert.Equal(2, paginatedList.Items?.Count);
+
+        // Verify all returned items end on or after 13:00
+        Assert.All(paginatedList.Items!, item =>
+        {
+            Assert.True(item.EndAtUtc >= baseDate.AddHours(3));
+        });
+
+        // Verify 11:00 work order is NOT included
+        Assert.DoesNotContain(paginatedList.Items!, item => item.WorkOrderId == workOrderEnds11.Id);
+    }
+
+    [Fact]
+    public async Task Handle_WithEndDateTo_ShouldReturnOnlyWorkOrdersEndingBefore()
+    {
+        // Arrange
+        Assert.True(IsEmptyDatabase());
+
+        var customer = CustomerFactory.CreateCustomer().Value;
+        var vehicle = customer.Vehicles.First();
+        var employee = EmployeeFactory.CreateEmployee().Value;
+
+        // Different duration tasks to create different end times
+        var shortTask = RepairTaskFactory.CreateRepairTask(
+            repairDurationInMinutes: RepairDurationInMinutes.Min60).Value;  // 1 hour
+        var longTask = RepairTaskFactory.CreateRepairTask(
+            repairDurationInMinutes: RepairDurationInMinutes.Min180).Value; // 3 hours
+
+        await _dbContext.Customers.AddAsync(customer);
+        await _dbContext.Vehicles.AddAsync(vehicle);
+        await _dbContext.Employees.AddAsync(employee);
+        await _dbContext.RepairTasks.AddAsync(shortTask);
+        await _dbContext.RepairTasks.AddAsync(longTask);
+        await _dbContext.SaveChangesAsync(default);
+
+        var baseDate = DateTimeOffset.UtcNow.Date.AddDays(1).AddHours(10);
+
+        // Create work orders with different end times
+        // WorkOrder 1: 10:00 - 11:00 (ends at 11:00)
+        var workOrderEnds11 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseDate,
+            laborId: employee.Id,
+            spot: Spot.A,
+            repairTasks: [shortTask]).Value;
+
+        // WorkOrder 2: 12:00 - 13:00 (ends at 13:00)
+        var workOrderEnds13 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseDate.AddHours(2),
+            laborId: employee.Id,
+            spot: Spot.B,
+            repairTasks: [shortTask]).Value;
+
+        // WorkOrder 3: 14:00 - 17:00 (ends at 17:00)
+        var workOrderEnds17 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseDate.AddHours(4),
+            laborId: employee.Id,
+            spot: Spot.C,
+            repairTasks: [longTask]).Value;
+
+        await _dbContext.WorkOrders.AddAsync(workOrderEnds11);
+        await _dbContext.WorkOrders.AddAsync(workOrderEnds13);
+        await _dbContext.WorkOrders.AddAsync(workOrderEnds17);
+        await _dbContext.SaveChangesAsync(default);
+
+        // Query for work orders ending at 13:00 or earlier
+        var query = new GetWorkOrdersQuery(
+            Page: 1,
+            PageSize: 10,
+            EndDateTo: baseDate.AddHours(3));  // 13:00
+
+        // Act
+        var result = await _mediator.Send(query);
+
+        // Assert
+        Assert.False(result.IsError);
+        Assert.NotNull(result.Value);
+
+        var paginatedList = result.Value;
+        Assert.Equal(2, paginatedList.TotalCount); // Ends at 11:00 and 13:00
+        Assert.Equal(2, paginatedList.Items?.Count);
+
+        // Verify all returned items end on or before 13:00
+        Assert.All(paginatedList.Items!, item =>
+        {
+            Assert.True(item.EndAtUtc <= baseDate.AddHours(3));
+        });
+
+        // Verify 17:00 work order is NOT included
+        Assert.DoesNotContain(paginatedList.Items!, item => item.WorkOrderId == workOrderEnds17.Id);
     }
 }

@@ -64,6 +64,10 @@ public sealed class GetWorkOrdersQueryHandler(
                 wo => wo.StartAtUtc >= request.StartDateFrom!.Value.ToUniversalTime())
             .WhereIf(request.StartDateTo.HasValue,
                 wo => wo.StartAtUtc <= request.StartDateTo!.Value.ToUniversalTime())
+            .WhereIf(request.EndDateFrom.HasValue,
+                wo => wo.EndAtUtc >= request.EndDateFrom!.Value.ToUniversalTime())
+            .WhereIf(request.EndDateTo.HasValue,
+                wo => wo.EndAtUtc <= request.EndDateTo!.Value.ToUniversalTime())
             ;
     }
 }

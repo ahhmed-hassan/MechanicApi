@@ -3,7 +3,7 @@ using ErrorOr;
 using MechanicApplication.Common.Interfaces;
 using MechanicApplication.Common.Models;
 using MechanicApplication.Features.WorkOrders.Dtos;
-using MediatR;
+using MechanicApplication.Features.WorkOrders.Queries.GetWorkOrders.Enums;
 
 namespace MechanicApplication.Features.WorkOrders.Queries.GetWorkOrders;
 
@@ -18,7 +18,10 @@ public sealed record  GetWorkOrdersQuery
     DateTime? StartDateTo = null,
     DateTime? EndDateFrom = null,
     DateTime? EndDateTo = null,
-    MechanicDomain.WorkOrders.Enums.Spot? Spot = null)
+    MechanicDomain.WorkOrders.Enums.Spot? Spot = null, 
+    WorkOrderSortColumn SortColumn = WorkOrderSortColumn.CreatedAt,
+    SortDirection SortDirection = SortDirection.Desc
+    )
     : ICachedQuery<ErrorOr<PaginatedList<WorkOrderListItemDTO>>>
 {
     public string CacheKey =>

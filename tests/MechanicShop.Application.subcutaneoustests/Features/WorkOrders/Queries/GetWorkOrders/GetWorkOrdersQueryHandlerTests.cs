@@ -1,7 +1,7 @@
 ﻿
 using MechanicApi.Application.subcutaneoustests.Common;
 using MechanicApplication.Features.WorkOrders.Queries.GetWorkOrders;
-
+using MechanicApplication.Features.WorkOrders.Queries.GetWorkOrders.Enums;
 using MechanicDomain.RepairTasks.Enums;
 using MechanicDomain.WorkOrders.Enums;
 using MechanicShop.Tests.Common.Customers;
@@ -716,5 +716,241 @@ public class GetWorkOrdersQueryHandlerTests(WebAppFactory factory)
         {
             Assert.Equal(Spot.B, item.Spot);
         });
+    }
+
+    [Fact]
+    public async Task Handle_WithSortByStartAtAscending_ShouldReturnWorkOrdersInChronologicalOrder()
+    {
+        // Arrange
+        Assert.True(IsEmptyDatabase());
+
+        var customer = CustomerFactory.CreateCustomer().Value;
+        var vehicle = customer.Vehicles.First();
+        var employee = EmployeeFactory.CreateEmployee().Value;
+        var repairTask = RepairTaskFactory.CreateRepairTask(
+            repairDurationInMinutes: RepairDurationInMinutes.Min60).Value;
+
+        await _dbContext.Customers.AddAsync(customer);
+        await _dbContext.Vehicles.AddAsync(vehicle);
+        await _dbContext.Employees.AddAsync(employee);
+        await _dbContext.RepairTasks.AddAsync(repairTask);
+        await _dbContext.SaveChangesAsync(default);
+
+        var baseDate = DateTimeOffset.UtcNow.Date.AddDays(1);
+
+        // Create work orders with different start times
+        var workOrderDay3 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseDate.AddDays(3).AddHours(10),
+            laborId: employee.Id,
+            spot: Spot.A,
+            repairTasks: [repairTask]).Value;
+
+        var workOrderDay1 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseDate.AddDays(1).AddHours(10),
+            laborId: employee.Id,
+            spot: Spot.B,
+            repairTasks: [repairTask]).Value;
+
+        var workOrderDay5 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseDate.AddDays(5).AddHours(10),
+            laborId: employee.Id,
+            spot: Spot.C,
+            repairTasks: [repairTask]).Value;
+
+        await _dbContext.WorkOrders.AddAsync(workOrderDay3);
+        await _dbContext.WorkOrders.AddAsync(workOrderDay1);
+        await _dbContext.WorkOrders.AddAsync(workOrderDay5);
+        await _dbContext.SaveChangesAsync(default);
+
+        // Query with ascending sort by StartAt
+        var query = new GetWorkOrdersQuery(
+            Page: 1,
+            PageSize: 10,
+            SortColumn: WorkOrderSortColumn.StartAt,
+            SortDirection: SortDirection.Asc);
+
+        // Act
+        var result = await _mediator.Send(query);
+
+        // Assert
+        Assert.False(result.IsError);
+        Assert.NotNull(result.Value);
+
+        var items = result.Value.Items?.ToList();
+        Assert.NotNull(items);
+        Assert.Equal(3, items.Count);
+
+        // Verify chronological order (Day 1, Day 3, Day 5)
+        Assert.Equal(workOrderDay1.Id, items[0].WorkOrderId);
+        Assert.Equal(workOrderDay3.Id, items[1].WorkOrderId);
+        Assert.Equal(workOrderDay5.Id, items[2].WorkOrderId);
+    }
+
+    [Fact]
+    public async Task Handle_WithSortByStartAtDescending_ShouldReturnWorkOrdersInReverseChronologicalOrder()
+    {
+        // Arrange
+        Assert.True(IsEmptyDatabase());
+
+        var customer = CustomerFactory.CreateCustomer().Value;
+        var vehicle = customer.Vehicles.First();
+        var employee = EmployeeFactory.CreateEmployee().Value;
+        var repairTask = RepairTaskFactory.CreateRepairTask(
+            repairDurationInMinutes: RepairDurationInMinutes.Min60).Value;
+
+        await _dbContext.Customers.AddAsync(customer);
+        await _dbContext.Vehicles.AddAsync(vehicle);
+        await _dbContext.Employees.AddAsync(employee);
+        await _dbContext.RepairTasks.AddAsync(repairTask);
+        await _dbContext.SaveChangesAsync(default);
+
+        var baseDate = DateTimeOffset.UtcNow.Date.AddDays(1);
+
+        // Create work orders with different start times
+        var workOrderDay3 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseDate.AddDays(3).AddHours(10),
+            laborId: employee.Id,
+            spot: Spot.A,
+            repairTasks: [repairTask]).Value;
+
+        var workOrderDay1 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseDate.AddDays(1).AddHours(10),
+            laborId: employee.Id,
+            spot: Spot.B,
+            repairTasks: [repairTask]).Value;
+
+        var workOrderDay5 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseDate.AddDays(5).AddHours(10),
+            laborId: employee.Id,
+            spot: Spot.C,
+            repairTasks: [repairTask]).Value;
+
+        await _dbContext.WorkOrders.AddAsync(workOrderDay3);
+        await _dbContext.WorkOrders.AddAsync(workOrderDay1);
+        await _dbContext.WorkOrders.AddAsync(workOrderDay5);
+        await _dbContext.SaveChangesAsync(default);
+
+        // Query with descending sort by StartAt
+        var query = new GetWorkOrdersQuery(
+            Page: 1,
+            PageSize: 10,
+            SortColumn: WorkOrderSortColumn.StartAt,
+            SortDirection: SortDirection.Desc);
+
+        // Act
+        var result = await _mediator.Send(query);
+
+        // Assert
+        Assert.False(result.IsError);
+        Assert.NotNull(result.Value);
+
+        var items = result.Value.Items?.ToList();
+        Assert.NotNull(items);
+        Assert.Equal(3, items.Count);
+
+        // Verify reverse chronological order (Day 5, Day 3, Day 1)
+        Assert.Equal(workOrderDay5.Id, items[0].WorkOrderId);
+        Assert.Equal(workOrderDay3.Id, items[1].WorkOrderId);
+        Assert.Equal(workOrderDay1.Id, items[2].WorkOrderId);
+    }
+
+    [Fact]
+    public async Task Handle_WithSortByStateAscending_ShouldReturnWorkOrdersSortedByState()
+    {
+        // Arrange
+        Assert.True(IsEmptyDatabase());
+
+        var customer = CustomerFactory.CreateCustomer().Value;
+        var vehicle = customer.Vehicles.First();
+        var employee = EmployeeFactory.CreateEmployee().Value;
+        var repairTask = RepairTaskFactory.CreateRepairTask(
+            repairDurationInMinutes: RepairDurationInMinutes.Min60).Value;
+
+        await _dbContext.Customers.AddAsync(customer);
+        await _dbContext.Vehicles.AddAsync(vehicle);
+        await _dbContext.Employees.AddAsync(employee);
+        await _dbContext.RepairTasks.AddAsync(repairTask);
+        await _dbContext.SaveChangesAsync(default);
+
+        var baseTime = DateTimeOffset.UtcNow.Date.AddDays(1).AddHours(10);
+
+        // Create work orders with different states
+        var completedWorkOrder = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseTime,
+            laborId: employee.Id,
+            spot: Spot.A,
+            repairTasks: [repairTask]).Value;
+        completedWorkOrder.UpdateState(WorkOrderState.InProgress);
+        completedWorkOrder.UpdateState(WorkOrderState.Completed);
+
+        var scheduledWorkOrder = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseTime.AddHours(2),
+            laborId: employee.Id,
+            spot: Spot.B,
+            repairTasks: [repairTask]).Value;
+        // Scheduled is default state
+
+         var scheduledWorkOrder2 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseTime.AddHours(3),
+            laborId: employee.Id,
+            spot: Spot.B,
+            repairTasks: [repairTask]).Value;
+
+        var inProgressWorkOrder = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle.Id,
+            startAt: baseTime.AddHours(4),
+            laborId: employee.Id,
+            spot: Spot.C,
+            repairTasks: [repairTask]).Value;
+        inProgressWorkOrder.UpdateState(WorkOrderState.InProgress);
+
+        await _dbContext.WorkOrders.AddAsync(completedWorkOrder);
+        await _dbContext.WorkOrders.AddAsync(scheduledWorkOrder);
+        await _dbContext.WorkOrders.AddAsync(scheduledWorkOrder2);
+        await _dbContext.WorkOrders.AddAsync(inProgressWorkOrder);
+        await _dbContext.SaveChangesAsync(default);
+
+        // Query with ascending sort by State
+        var query = new GetWorkOrdersQuery(
+            Page: 1,
+            PageSize: 10,
+            SortColumn: WorkOrderSortColumn.State,
+            SortDirection: SortDirection.Asc);
+
+        // Act
+        var result = await _mediator.Send(query);
+
+        // Assert
+        Assert.False(result.IsError);
+        Assert.NotNull(result.Value);
+
+        var items = result.Value.Items?.ToList();
+        Assert.Equal(4, items?.Count);
+        Assert.NotNull(items);
+        var statesAsStrings = items.Select(i => i.State.ToString()).ToList();
+
+        // Verify states are in ascending order
+        // Enum orders are alphabetical: Cancelled, Completed, InProgress, Scheduled
+        Assert.Equal(new[]
+        {
+            WorkOrderState.Completed.ToString(),
+            WorkOrderState.InProgress.ToString(),
+            WorkOrderState.Scheduled.ToString(),
+            WorkOrderState.Scheduled.ToString()
+        }, statesAsStrings);
+        //This here is tecnically not true as long as the WorkOrderConfiguration uses strings instead of enums. See WOrkOrderConfiguration
+        //Assert.True(items[0].State <= items[1].State);
+        //Assert.True(items[1].State <= items[2].State);
+        //Assert.True(items[2].State <= items[3].State);
+
     }
 }

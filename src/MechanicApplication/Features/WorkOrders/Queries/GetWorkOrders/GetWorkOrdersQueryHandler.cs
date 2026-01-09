@@ -3,6 +3,7 @@ using MechanicApplication.Common.Interfaces;
 using MechanicApplication.Common.Models;
 using MechanicApplication.Features.Customers.DTOMappers;
 using MechanicApplication.Features.WorkOrders.Dtos;
+using MechanicApplication.Features.WorkOrders.Queries.GetWorkOrders.Enums;
 using MechanicDomain.WorkOrders;
 using MechanicDomain.WorkOrders.Enums;
 using MediatR;
@@ -34,6 +35,7 @@ public sealed class GetWorkOrdersQueryHandler(
             .AsQueryable()
                 ;
         workOrdersQuery = ApplyFilters(workOrdersQuery, request);
+        workOrdersQuery = ApplySorting(workOrdersQuery, request.SortColumn, request.SortDirection);
         var count = await workOrdersQuery.CountAsync(cancellationToken: cancellationToken);
 
         var items = await workOrdersQuery
@@ -70,6 +72,56 @@ public sealed class GetWorkOrdersQueryHandler(
             .WhereIf(request.EndDateTo.HasValue,
                 wo => wo.EndAtUtc <= request.EndDateTo!.Value.ToUniversalTime())
             ;
+    }
+
+    private static IQueryable<WorkOrder> ApplySorting(
+    IQueryable<WorkOrder> query,
+    WorkOrderSortColumn sortColumn,
+    SortDirection sortDirection)
+    {
+        // ✅ Check once, then apply to the selected property
+        return sortColumn switch
+        {
+            WorkOrderSortColumn.CreatedAt =>
+                ApplyOrder(query, wo => wo.CreatedAtUtc, sortDirection),
+
+            WorkOrderSortColumn.UpdatedAt =>
+                ApplyOrder(query, wo => wo.LastModifiedUtc, sortDirection),
+
+            WorkOrderSortColumn.StartAt =>
+                ApplyOrder(query, wo => wo.StartAtUtc, sortDirection),
+
+            WorkOrderSortColumn.EndAt =>
+                ApplyOrder(query, wo => wo.EndAtUtc, sortDirection),
+
+            WorkOrderSortColumn.State =>
+                ApplyOrder(query, wo => wo.State, sortDirection),
+
+            WorkOrderSortColumn.Spot =>
+                ApplyOrder(query, wo => wo.Spot, sortDirection),
+
+            WorkOrderSortColumn.Total =>
+                ApplyOrder(query, wo => wo.Total, sortDirection),
+
+            WorkOrderSortColumn.VehicleId =>
+                ApplyOrder(query, wo => wo.VehicleId, sortDirection),
+
+            WorkOrderSortColumn.LaborId =>
+                ApplyOrder(query, wo => wo.LaborId, sortDirection),
+
+            _ => query.OrderByDescending(wo => wo.CreatedAtUtc) // Default
+        };
+    }
+
+    // ✅ Helper method - checks direction once
+    private static IQueryable<WorkOrder> ApplyOrder<TKey>(
+        IQueryable<WorkOrder> query,
+        Expression<Func<WorkOrder, TKey>> keySelector,
+        SortDirection sortDirection)
+    {
+        return sortDirection == SortDirection.Asc  
+         ? query.OrderBy(keySelector)
+         : query.OrderByDescending(keySelector);
     }
 }
 

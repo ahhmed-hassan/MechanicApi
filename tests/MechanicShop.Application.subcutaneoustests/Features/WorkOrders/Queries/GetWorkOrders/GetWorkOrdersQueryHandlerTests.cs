@@ -167,4 +167,83 @@ public class GetWorkOrdersQueryHandlerTests(WebAppFactory factory)
         Assert.Equal(inProgressWorkOrder.Id, item.WorkOrderId);
         Assert.Equal(WorkOrderState.InProgress, item.State);
     }
+
+    [Fact]
+    public async Task Handle_WithVehicleFilter_ShouldReturnOnlyMatchingVehicle()
+    {
+        // Arrange
+        Assert.True(IsEmptyDatabase());
+
+        // Create two vehicles for two different customers
+        var vehicle1 = VehicleFactory.CreateVehicle().Value;
+        var vehicle2 = VehicleFactory.CreateVehicle().Value;
+        var customer1 = CustomerFactory.CreateCustomer(vehicles: [vehicle1]).Value;
+        var customer2 = CustomerFactory.CreateCustomer(vehicles: [vehicle2]).Value;
+
+        var employee = EmployeeFactory.CreateEmployee().Value;
+        var repairTask = RepairTaskFactory.CreateRepairTask(
+            repairDurationInMinutes: RepairDurationInMinutes.Min60).Value;
+
+        await _dbContext.Customers.AddAsync(customer1);
+        await _dbContext.Customers.AddAsync(customer2);
+        await _dbContext.Vehicles.AddAsync(vehicle1);
+        await _dbContext.Vehicles.AddAsync(vehicle2);
+        await _dbContext.Employees.AddAsync(employee);
+        await _dbContext.RepairTasks.AddAsync(repairTask);
+        await _dbContext.SaveChangesAsync(default);
+
+        var baseTime = DateTimeOffset.UtcNow.Date.AddDays(1).AddHours(10);
+
+        // Create 2 work orders for vehicle1
+        var workOrder1Vehicle1 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle1.Id,
+            startAt: baseTime,
+            laborId: employee.Id,
+            spot: Spot.A,
+            repairTasks: [repairTask]).Value;
+
+        var workOrder2Vehicle1 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle1.Id,
+            startAt: baseTime.AddHours(2),
+            laborId: employee.Id,
+            spot: Spot.B,
+            repairTasks: [repairTask]).Value;
+
+        // Create 1 work order for vehicle2
+        var workOrderVehicle2 = WorkOrderFactory.CreateWorkOrder(
+            vehicleId: vehicle2.Id,
+            startAt: baseTime.AddHours(4),
+            laborId: employee.Id,
+            spot: Spot.C,
+            repairTasks: [repairTask]).Value;
+
+        await _dbContext.WorkOrders.AddAsync(workOrder1Vehicle1);
+        await _dbContext.WorkOrders.AddAsync(workOrder2Vehicle1);
+        await _dbContext.WorkOrders.AddAsync(workOrderVehicle2);
+        await _dbContext.SaveChangesAsync(default);
+
+        // Query only for vehicle1's work orders
+        var query = new GetWorkOrdersQuery(
+            Page: 1,
+            PageSize: 10,
+            VehicleId: vehicle1.Id);
+
+        // Act
+        var result = await _mediator.Send(query);
+
+        // Assert
+        Assert.False(result.IsError);
+        Assert.NotNull(result.Value);
+
+        var paginatedList = result.Value;
+        Assert.Equal(2, paginatedList.TotalCount); // Only 2 work orders for vehicle1
+        Assert.Equal(2, paginatedList.Items.Count);
+
+        // Verify all returned items are for vehicle1
+        Assert.All(paginatedList.Items, item =>
+        {
+            Assert.Equal(vehicle1.Id, item.Vehicle.VehicleId);
+            Assert.Equal(customer1.Name, item.Customer);
+        });
+    }
 }

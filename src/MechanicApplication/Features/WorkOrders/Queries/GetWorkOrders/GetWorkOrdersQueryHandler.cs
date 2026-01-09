@@ -55,7 +55,10 @@ public sealed class GetWorkOrdersQueryHandler(
     private static IQueryable<WorkOrder> ApplyFilters(IQueryable<WorkOrder> query, GetWorkOrdersQuery request)
     {
         return query
-            .WhereIf(request.State.HasValue,wo => wo.State == request.State!.Value);
+            .WhereIf(request.State.HasValue,wo => wo.State == request.State!.Value)
+            .WhereIf(request.VehicleId.GetValueOrDefault(Guid.Empty) != Guid.Empty 
+                       , wo => wo.VehicleId == request.VehicleId)
+            ;
     }
 }
 

@@ -2,6 +2,7 @@
 using ErrorOr;
 using MechanicApi.ContractDomainMapping;
 using MechanicApplication.Common.Constants;
+using MechanicApplication.Common.Models;
 using MechanicApplication.Features.RepairTasks.Commands.UpdateRepairTask;
 using MechanicApplication.Features.WorkOrders.Commands.AssignLabor;
 using MechanicApplication.Features.WorkOrders.Commands.CreateWorkOrder;
@@ -27,6 +28,36 @@ namespace MechanicApi.Controllers
     [ApiVersion("1.0")]
     public class WorkOrderController(ISender sender) : ApiBaseController
     {
+
+        [HttpGet]
+        [ProducesResponseType<PaginatedList<WorkOrderListItemDTO>>(StatusCodes.Status200OK)]
+        [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
+        [EndpointSummary("Get a paginated list of work orders")]
+        [EndpointDescription("Supports filtering by date range, status, vehicle, labor, spot, and searching by term. Pagination and sorting are supported.")]
+        [EndpointName("GetWorkOrders")]
+        public async Task<ActionResult<PaginatedList<WorkOrderListItemDTO>>> GetAll(
+            [FromQuery] WorkOrderFilterRequest request,
+            [FromQuery] PageRequest pageRequest,
+            CancellationToken cancellationToken)
+        {
+            var query = new MechanicApplication.Features.WorkOrders.Queries.GetWorkOrders.GetWorkOrdersQuery(
+                pageRequest.Page,
+                pageRequest.PageSize,
+                request.State?.ToDomainWorkOrderState(),
+                request.VehicleId,
+                request.LaborId,
+                request.StartDateFrom,
+                request.StartDateTo,
+                request.EndDateFrom,
+                request.EndDateTo,
+                request.Spot?.ToDomainSpot(),
+                request.SortColumn.ToApplicationWorkOrderColumn(),
+                request.SortDirection.ToApplicationSortDirection(),
+                request.SearchTerm
+                );
+            var result = await sender.Send(query, cancellationToken);
+            return result.Match(Ok, Problem);
+        }
 
         [HttpPost]
         [Authorize(Policy = nameof(Role.Manager))]

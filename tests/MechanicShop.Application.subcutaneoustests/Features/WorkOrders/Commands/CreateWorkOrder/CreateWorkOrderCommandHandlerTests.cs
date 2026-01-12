@@ -17,7 +17,7 @@ using Xunit;
 namespace MechanicApi.Application.subcutaneoustests.Features.WorkOrders.Commands.CreateWorkOrder;
 [Collection(WebbAppFactoryColllection.CollectionName)]
 public class CreateWorkOrderCommandHandlerTests(WebAppFactory factory)
-    :IntegrationTestBase(factory)
+    :IntegrationTestsBase(factory)
 {
     //private readonly IMediator _mediator = factory.Mediator;
     //private readonly IAppDbContext _dbContext = factory.DbContext;

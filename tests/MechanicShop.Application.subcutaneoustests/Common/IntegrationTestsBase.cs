@@ -11,14 +11,14 @@ using Xunit;
 namespace MechanicApi.Application.subcutaneoustests.Common;
 
 [Collection(WebbAppFactoryColllection.CollectionName)]
-public abstract class IntegrationTestBase
+public abstract class IntegrationTestsBase
     : IAsyncLifetime
 {
     protected readonly WebAppFactory _factory;
     protected readonly IMediator _mediator;
     protected readonly IAppDbContext _dbContext;
 
-    protected IntegrationTestBase(WebAppFactory factory)
+    protected IntegrationTestsBase(WebAppFactory factory)
     {
         _factory = factory;
         _mediator = factory.Mediator;

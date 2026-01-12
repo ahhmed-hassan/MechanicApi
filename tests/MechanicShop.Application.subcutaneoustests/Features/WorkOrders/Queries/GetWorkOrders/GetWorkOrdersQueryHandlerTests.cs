@@ -15,7 +15,7 @@ namespace MechanicShop.Application.SubcutaneousTests.Features.WorkOrders.Queries
 
 [Collection(WebbAppFactoryColllection.CollectionName)]
 public class GetWorkOrdersQueryHandlerTests(WebAppFactory factory)
-    : IntegrationTestBase(factory)
+    : IntegrationTestsBase(factory)
 {
     [Fact]
     public async Task Handle_WithBasicPagination_ShouldReturnSecondPage()

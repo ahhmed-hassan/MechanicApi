@@ -14,7 +14,7 @@ namespace MechanicApi.Application.subcutaneoustests.Features.WorkOrders.Commands
 
 [Collection(WebbAppFactoryColllection.CollectionName)]
 public class UpdateWorkOrderRepairTasksCommandHandlerTests(WebAppFactory factory)
-    : IntegrationTestBase(factory)
+    : IntegrationTestsBase(factory)
 {
     [Fact]
     public async Task Handle_WithValidRequest_ShouldUpdateRepairTasks()

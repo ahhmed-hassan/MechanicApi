@@ -65,6 +65,7 @@ public class WebAppFactory : WebApplicationFactory<AssemblyMarker>, IAsyncLifeti
     /// <summary>
     /// Customize the test host used by the WebApplicationFactory.
     /// </summary>
+    /// <param name="builder">The IWebHostBuilder to configure.</param>
     /// <remarks>
     /// This method runs in the test host creation pipeline and uses the TestHost-specific
     /// __ConfigureTestServices__ extension to alter the application's service registrations

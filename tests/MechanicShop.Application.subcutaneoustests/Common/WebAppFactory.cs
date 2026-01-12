@@ -73,7 +73,7 @@ public class WebAppFactory : WebApplicationFactory<AssemblyMarker>, IAsyncLifeti
     ///
     /// Key actions performed here:
     /// 1) Remove all IHostedService registrations to prevent background services from starting during tests.
-    /// 2) Remove existing EF Core DbContextOptions<AppDbContext> registrations and re-register AppDbContext
+    /// 2) Remove existing EF Core <see cref="DbContextOptions"/>.<AppDbContext> registrations and re-register AppDbContext.
     ///    so it uses the ephemeral Testcontainers SQL Server instance. Any registered
     ///    ISaveChangesInterceptor implementations are preserved and attached to the DbContext.
     /// 3) Remove AppSettings registrations (the app's configured options) and then apply a

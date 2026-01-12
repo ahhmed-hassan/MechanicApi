@@ -28,26 +28,30 @@ public class CachingBehavior<TRequest, TResponse>(
             return await next();
         }
         _logger.LogInformation("Checking cache for {RequestName}", typeof(TRequest).Name);
-
+        var cacheHit = false;
         var result = await _cache.GetOrCreateAsync<TResponse>(
-           key: cachedQuery.CacheKey,
-            factory: _ => new ValueTask<TResponse>((TResponse)(object)(null!)),
+            key: cachedQuery.CacheKey,
+            factory: async _ =>
+            {
+                cacheHit = false;  // Mark as cache miss
+                return default!;   // Return default, we'll populate below
+            },
             options: new HybridCacheEntryOptions { Flags = HybridCacheEntryFlags.DisableUnderlyingData },
             cancellationToken: cancellationToken
-           );
+        );
 
-        if (result is null)
+        if (!cacheHit || EqualityComparer<TResponse>.Default.Equals(result, default))
         {
             result = await next(cancellationToken);
             if (result is IErrorOr {IsError : false})
             {
                 _logger.LogInformation("Caching result for {RequestName} with key {CacheKey}", typeof(TRequest).Name, cachedQuery.CacheKey);
                 await _cache.SetAsync(
-                     cachedQuery.CacheKey,
-                     result,
-                      new HybridCacheEntryOptions { Expiration = cachedQuery.Expiration },
-                     cachedQuery.Tags,
-                     cancellationToken);
+                    cachedQuery.CacheKey,
+                    result,
+                    new HybridCacheEntryOptions { Expiration = cachedQuery.Expiration },
+                    cachedQuery.Tags,
+                    cancellationToken);
             }
         }
 

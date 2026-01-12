@@ -1,6 +1,4 @@
-﻿
-
-using Xunit;
+﻿using Xunit;
 
 namespace MechanicApi.Application.subcutaneoustests.Common;
 

@@ -1,5 +1,4 @@
-﻿
-using MechanicApplication.Common.Interfaces;
+﻿using MechanicApplication.Common.Interfaces;
 using MechanicInfrastructure.Data.Migrations;
 using MechanicInfrastructure.Settings;
 using MediatR;

@@ -8,6 +8,7 @@
 		<NoWarn>$(NoWarn);6331</NoWarn>
 		<NoWarn>$(NoWarn);1101 </NoWarn>
 		<NoWarn>SA1101;SA1600;SA1401;SA1633</NoWarn>
+		<NoWarn>SA1602</NoWarn>
 		<ImplicitUsings>enable</ImplicitUsings>
 
 	</PropertyGroup>

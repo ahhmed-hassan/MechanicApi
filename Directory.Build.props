@@ -1,0 +1,21 @@
+<Project>
+	<PropertyGroup>
+		<ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+		<targetFramework>net9.0</targetFramework>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<IsPackable>true</IsPackable>
+		<NoWarn>$(NoWarn);6331</NoWarn>
+		<NoWarn>$(NoWarn);1101 </NoWarn>
+		<NoWarn>SA1101</NoWarn>
+		<ImplicitUsings>enable</ImplicitUsings>
+
+	</PropertyGroup>
+	
+	  <ItemGroup>
+		<PackageReference Include="StyleCop.Analyzers">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+</Project>

@@ -1,6 +1,4 @@
-﻿
-
-using Xunit;
+﻿using Xunit;
 
 namespace MechanicApi.Application.subcutaneoustests.Common;
 
@@ -22,7 +20,7 @@ public class WebbAppFactoryColllection : ICollectionFixture<WebAppFactory>
 {
     /// <summary>
     /// Logical name of the collection to be used on test classes.
-    /// Example: <c>[Collection(WebbAppFactoryColllection.CollectionName)]</c>
+    /// Example: <c>[Collection(WebbAppFactoryColllection.CollectionName)]</c>.
     /// </summary>
     public const string CollectionName = "WebAppFactoryCollection";
 }

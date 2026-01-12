@@ -1,3 +1,3 @@
 ﻿namespace MechanicDomain.Abstractions;
-public record DomainEvent : MediatR.INotification; 
-   
+
+public record DomainEvent : MediatR.INotification;

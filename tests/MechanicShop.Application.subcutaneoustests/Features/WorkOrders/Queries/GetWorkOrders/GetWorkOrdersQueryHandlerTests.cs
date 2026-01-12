@@ -1,5 +1,4 @@
-﻿
-using MechanicApi.Application.subcutaneoustests.Common;
+﻿using MechanicApi.Application.subcutaneoustests.Common;
 using MechanicApplication.Features.WorkOrders.Queries.GetWorkOrders;
 using MechanicApplication.Features.WorkOrders.Queries.GetWorkOrders.Enums;
 using MechanicDomain.RepairTasks.Enums;
@@ -15,7 +14,7 @@ namespace MechanicShop.Application.SubcutaneousTests.Features.WorkOrders.Queries
 
 [Collection(WebbAppFactoryColllection.CollectionName)]
 public class GetWorkOrdersQueryHandlerTests(WebAppFactory factory)
-    : IntegrationTestBase(factory)
+    : IntegrationTestsBase(factory)
 {
     [Fact]
     public async Task Handle_WithBasicPagination_ShouldReturnSecondPage()

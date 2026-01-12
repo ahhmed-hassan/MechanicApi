@@ -1,5 +1,4 @@
-﻿
-using MechanicApplication.Common.Interfaces;
+﻿using MechanicApplication.Common.Interfaces;
 using MechanicInfrastructure.Data.Migrations;
 using MechanicInfrastructure.Settings;
 using MediatR;
@@ -65,6 +64,7 @@ public class WebAppFactory : WebApplicationFactory<AssemblyMarker>, IAsyncLifeti
     /// <summary>
     /// Customize the test host used by the WebApplicationFactory.
     /// </summary>
+    /// <param name="builder">The IWebHostBuilder to configure.</param>
     /// <remarks>
     /// This method runs in the test host creation pipeline and uses the TestHost-specific
     /// __ConfigureTestServices__ extension to alter the application's service registrations
@@ -73,7 +73,7 @@ public class WebAppFactory : WebApplicationFactory<AssemblyMarker>, IAsyncLifeti
     ///
     /// Key actions performed here:
     /// 1) Remove all IHostedService registrations to prevent background services from starting during tests.
-    /// 2) Remove existing EF Core DbContextOptions<AppDbContext> registrations and re-register AppDbContext
+    /// 2) Remove existing EF Core <see cref="DbContextOptions"/>.<AppDbContext> registrations and re-register AppDbContext.
     ///    so it uses the ephemeral Testcontainers SQL Server instance. Any registered
     ///    ISaveChangesInterceptor implementations are preserved and attached to the DbContext.
     /// 3) Remove AppSettings registrations (the app's configured options) and then apply a

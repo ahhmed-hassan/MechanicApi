@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 
 namespace MechanicApplication.Features.WorkOrders.Commands.DeleteWorkOrder;
 
-public sealed class DeleteWrokOrderCommandHandler
+public sealed class DeleteWorkOrderCommandHandler
     (
     IAppDbContext context,
     ILogger<DeleteWorkOrderCommand> logger,

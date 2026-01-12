@@ -25,4 +25,3 @@ public static class CustomerErrors
     public static readonly Error CannotDeleteCustomerWithWorkOrders =
         Error.Conflict("Customer.CannotDelete", "Customer cannot be deleted due to existing work orders.");
 }
-

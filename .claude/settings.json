@@ -13,11 +13,7 @@
       "Bash(git status *)",
       "Bash(git diff *)",
       "Bash(git log *)",
-      "Bash(git add *)",
-      "Bash(git checkout -b *)",
-      "Bash(find *)",
-      "Bash(grep *)",
-      "Bash(cat *)"
+      "Bash(git checkout -b *)"
     ],
     "deny": [
       "Read(.env*)",
@@ -25,6 +21,8 @@
       "Bash(rm -rf *)",
       "Bash(git push *)",
       "Bash(git merge *)",
+      "Bash(git commit *)",
+      "Bash(git add *)",
       "Bash(dotnet publish *)"
     ]
   },
@@ -35,7 +33,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "dotnet build \"$CLAUDE_PROJECT_DIR/src/MechanicApi.sln\" --no-restore --verbosity quiet 2>&1 | tail -5"
+            "command": "dotnet build \"$CLAUDE_PROJECT_DIR/MechanicApi.sln\" --no-restore --verbosity quiet 2>&1 | tail -5"
           }
         ]
       }

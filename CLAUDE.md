@@ -7,8 +7,8 @@ Domain: automotive mechanic shop management — work orders, customers, vehicles
 ## Tech Stack
 - **Backend:** ASP.NET Core 8, Entity Framework Core 8, MediatR, ErrorOr, FluentValidation
 - **Frontend:** Blazor (Server or WASM — TBD, learning phase)
-- **Testing:** xUnit, Testcontainers (PostgreSQL), FluentAssertions
-- **DB:** PostgreSQL
+- **Testing:** xUnit, Testcontainers (SQL Server), FluentAssertions
+- **DB:** SQL Server (local dev: Windows Auth, integration tests: Testcontainers MsSql via Docker)
 
 ## Project Structure
 ```
@@ -20,21 +20,30 @@ src/
   MechanicApi.Contracts/      # Request/response DTOs
   MechanicApi.Web/            # Blazor frontend (planned)
 tests/
-  MechanicApi.Domain.Tests/
-  MechanicApi.Application.Tests/
-  MechanicApi.Infrastructure.Tests/   # Integration tests with Testcontainers
-  MechanicApi.Api.Tests/
+  MechanicApi.Domain.UnitTests/
+  MechanicShop.Application.Unittests/
+  MechanicShop.Application.subcutaneoustests/  # Integration tests with Testcontainers (requires Docker)
+  MechanicShop.API.Integration/
+  MechanicApi.Tests.Common/                    # Shared test utilities
 ```
 
 ## Commands
 ```bash
-dotnet build src/MechanicApi.sln
-dotnet test tests/MechanicApi.Domain.Tests
-dotnet test tests/MechanicApi.Application.Tests
-dotnet test tests/MechanicApi.Infrastructure.Tests  # requires Docker
-dotnet ef migrations add <Name> --project src/MechanicApi.Infrastructure --startup-project src/MechanicApi.Api
-dotnet ef database update --project src/MechanicApi.Infrastructure --startup-project src/MechanicApi.Api
+dotnet build MechanicApi.sln
+dotnet test tests/MechanicApi.Domain.UnitTests
+dotnet test tests/MechanicShop.Application.Unittests
+dotnet test tests/MechanicShop.Application.subcutaneoustests  # requires Docker (Testcontainers MsSql)
+dotnet test tests/MechanicShop.API.Integration                # requires Docker
+dotnet ef migrations add <Name> --project src/MechanicInfrastructure --startup-project src/MechanicApi
+dotnet ef database update --project src/MechanicInfrastructure --startup-project src/MechanicApi
 ```
+
+> **Note:** Some test folder names use `MechanicShop.*` while project/assembly names use `MechanicApi.*`. Use folder paths with `dotnet test`.
+
+## Prerequisites
+
+- **Docker Desktop** must be running for integration/subcutaneous tests (Testcontainers spins up ephemeral SQL Server containers)
+- Unit tests (`Domain.UnitTests`, `Application.Unittests`) do not require Docker
 
 ## Architecture Rules — IMPORTANT
 
@@ -94,3 +103,4 @@ Before considering any code change "done":
 3. New public behavior must have corresponding tests
 4. No `// TODO` without a linked issue or explicit discussion
 5. Architecture rules above must not be violated — if a change requires bending a rule, discuss it first (Mode 1)
+6. Run `/review-arch` on changed files before opening a PR

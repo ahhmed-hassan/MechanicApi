@@ -45,6 +45,12 @@ dotnet ef database update --project src/MechanicInfrastructure --startup-project
 - **Docker Desktop** must be running for integration/subcutaneous tests (Testcontainers spins up ephemeral SQL Server containers)
 - Unit tests (`Domain.UnitTests`, `Application.Unittests`) do not require Docker
 
+
+## Current State
+- `docs/` contains architecture evaluation, domain model review, and EF Core analysis — read these before suggesting architectural changes
+- Claude Code setup is finalized (permissions, hooks, skills, engagement modes)
+- Known tech debt is prioritized in docs/ARCHITECTURE_EVALUATION.md
+
 ## Architecture Rules — IMPORTANT
 
 1. **Aggregates are boundaries.** No navigation properties between aggregates. Reference by ID only.

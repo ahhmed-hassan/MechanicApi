@@ -4,7 +4,6 @@ A comprehensive RESTful API following Clean Architecture for managing an automot
 ![.Net](https://img.shields.io/badge/.NET-5C2D91?style=for-the-badge&logo=.net&logoColor=white)
 ![C#](https://img.shields.io/badge/c%23-%23239120.svg?style=for-the-badge&logo=csharp&logoColor=white)
 ![MicrosoftSQLServer](https://img.shields.io/badge/Microsoft%20SQL%20Server-CC2927?style=for-the-badge&logo=microsoft%20sql%20server&logoColor=white)
-![Swagger](https://img.shields.io/badge/-Swagger-%23Clojure?style=for-the-badge&logo=swagger&logoColor=white)
 ![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-FFFFFF?&style=for-the-badge&logo=opentelemetry&logoColor=black)
 
 ---
@@ -20,6 +19,7 @@ A comprehensive RESTful API following Clean Architecture for managing an automot
 - Create and manage repair orders  
 - Schedule appointments with time slots  
 - Assign work to specific service bays  
+- Assign and reassign labor to work orders  
 - Track order status through entire lifecycle  
 
 ### **Repair Operations**
@@ -28,13 +28,13 @@ A comprehensive RESTful API following Clean Architecture for managing an automot
 - Labor management with pricing  
 - Comprehensive task estimation  
 
-### **Invoice & Billing**
+### **Invoice & Billing** *(coming soon)*
 - Automated invoice generation  
 - PDF export functionality  
 - Payment status tracking  
 - Detailed billing with tax calculations  
 
-### **Dashboard & Analytics**
+### **Dashboard & Analytics** *(coming soon)*
 - Real-time business metrics  
 - Revenue and profit tracking  
 - Completion rate statistics  
@@ -42,30 +42,54 @@ A comprehensive RESTful API following Clean Architecture for managing an automot
 
 ### **Authentication & Authorization**
 - JWT-based secure authentication  
-- Role-based access control (Managers/Customers)  
+- Role-based access control (Manager/Labor)  
 - Token refresh functionality  
 - Secure claim management  
+
+---
+
+## 🏛️ Architecture
+
+This project follows **Clean Architecture**, keeping business logic independent of frameworks and infrastructure concerns.
+
+```
+src/
+├── MechanicDomain/           # Entities, value objects, domain events — no dependencies
+├── MechanicApplication/      # Use cases, CQRS handlers, interfaces, validators
+├── MechanicInfrastructure/   # EF Core, SQL Server, external services
+├── MechanicApi/              # ASP.NET Core Web API — controllers, middleware, DI wiring
+└── MechanicContracts/        # Shared request/response DTOs
+
+tests/
+├── MechanicApi.Domain.UnitTests/
+├── MechanicShop.Application.Unittests/
+├── MechanicShop.Application.subcutaneoustests/
+└── MechanicShop.API.Integration/
+```
+
+Dependency flow: `Api → Application → Domain` (Infrastructure implements Application interfaces via DI).
 
 ---
 
 ## 🚀 Quick Start  
 
 ### **Prerequisites**
-- .NET 7.0 SDK  
-- PostgreSQL 15+  
+- .NET 9.0 SDK  
+- Microsoft SQL Server  
 - Git  
 
 ### **Installation**
-Docker is about to add. Stay tuned! <br>
-**Clone the repository**
+Docker support is coming soon. Stay tuned!
 
+---
 
 ## 🔐 Authentication
 
 The API uses **JWT Bearer authentication**. To access protected endpoints:
 
 1. Obtain a token from `/identity/token/generate`
-2. Include the token in requests:
+2. Include the token in requests as a `Bearer` header
+
 ### **Example Login Request**
 ```json
 {
@@ -74,76 +98,88 @@ The API uses **JWT Bearer authentication**. To access protected endpoints:
 }
 ```
 
+### **Roles**
+
+| Role | Capabilities |
+|------|-------------|
+| **Manager** | Full access — manage customers, work orders, repair tasks, and labors |
+| **Labor** | View and update state of own assigned work orders |
+
+---
+
 ## 📋 API Endpoints
+
 ### Identity Management
 
-- POST /identity/token/generate - Obtain JWT token
-
-- POST /identity/token/refresh-token - Refresh access token
-
-- GET /identity/current-user/claims - Get current user info
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/identity/token/generate` | Obtain JWT token |
+| POST | `/identity/token/refresh-token` | Refresh access token |
+| GET | `/identity/current-user/claims` | Get current user info |
 
 ### Customers
 
-- GET /api/v1/customers - List all customers
-
-- POST /api/v1/customers - Create new customer
-
-- GET /api/v1/customers/{id} - Get customer details
-
-- PUT /api/v1/customers/{id} - Update customer
-
-- DELETE /api/v1/customers/{id} - Delete customer
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/customers` | List all customers |
+| POST | `/api/v1/customers` | Create new customer (Manager only) |
+| GET | `/api/v1/customers/{id}` | Get customer details |
+| PUT | `/api/v1/customers/{id}` | Update customer (Manager only) |
+| DELETE | `/api/v1/customers/{id}` | Delete customer (Manager only) |
 
 ### Work Orders
 
-- GET /api/v1/workorders - Paginated work orders with filtering
-
-- POST /api/v1/workorders - Create new work order
-
-- GET /api/v1/workorders/{id} - Get work order details
-
-- PUT /api/v1/workorders/{id}/state - Update work order state
-
-- DELETE /api/v1/workorders/{id} - Delete work order
-
-### Invoices
-
-- POST /api/v1/invoices/workorders/{id} - Generate invoice
-
-- GET /api/v1/invoices/{id} - Get invoice details
-
-- GET /api/v1/invoices/{id}/pdf - Download PDF invoice
-
-- PUT /api/v1/invoices/{id}/payments - Mark as paid
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/workorders` | Paginated work orders with filtering and sorting |
+| POST | `/api/v1/workorders` | Create new work order (Manager only) |
+| GET | `/api/v1/workorders/{id}` | Get work order details |
+| PUT | `/api/v1/workorders/{id}/state` | Update work order state (Manager or assigned Labor) |
+| PUT | `/api/v1/workorders/{id}/labor` | Assign labor to work order (Manager only) |
+| PUT | `/api/v1/workorders/{id}/repair-tasks` | Update repair tasks on a work order (Manager only) |
+| POST | `/api/v1/workorders/{id}/relocate` | Relocate work order to new time/spot (Manager only) |
+| DELETE | `/api/v1/workorders/{id}` | Delete work order (Manager only) |
 
 ### Repair Tasks
 
-- GET /api/v1/repair-tasks - List all repair tasks
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/repair-tasks` | List all repair tasks |
+| POST | `/api/v1/repair-tasks` | Create new repair task (Manager only) |
+| GET | `/api/v1/repair-tasks/{id}` | Get repair task details |
+| PUT | `/api/v1/repair-tasks/{id}` | Update repair task (Manager only) |
+| DELETE | `/api/v1/repair-tasks/{id}` | Delete repair task (Manager only) |
 
-- POST /api/v1/repair-tasks - Create new repair task
+### Labors
 
-- PUT /api/v1/repair-tasks/{id} - Update repair task
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/labors` | List all labor employees |
 
-- DELETE /api/v1/repair-tasks/{id} - Delete repair task
+### Invoices *(coming soon)*
 
-### Dashboard
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/invoices/workorders/{id}` | Generate invoice for a work order |
+| GET | `/api/v1/invoices/{id}` | Get invoice details |
+| GET | `/api/v1/invoices/{id}/pdf` | Download PDF invoice |
+| PUT | `/api/v1/invoices/{id}/payments` | Mark invoice as paid |
 
-- GET /api/v1/dashboard/stats - Get business statistics
+### Dashboard *(coming soon)*
 
-- GET /api/v1/workorders/schedule/{date} - Get daily schedule
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/dashboard/stats` | Get business statistics |
+| GET | `/api/v1/workorders/schedule/{date}` | Get daily schedule |
+
+---
 
 ## 🏗️ Data Models
 
-### Key Entities:
-
-- Customer: Represents shop clients with contact information
-
-- Vehicle: Customer vehicles with make, model, and license details. It cannot exist without a customer
-
-- WorkOrder: Repair orders with scheduling and status tracking
-
-- RepairTask: Individual repair operations with parts and labor
-
-- Invoice: Billing documents with payment tracking
-
+| Entity | Description |
+|--------|-------------|
+| **Customer** | Shop clients with contact information |
+| **Vehicle** | Customer vehicles (make, model, license) — cannot exist without a customer |
+| **WorkOrder** | Repair orders with scheduling and status tracking |
+| **RepairTask** | Individual repair operations with parts and labor costs |
+| **Employee** | Shop employees with a role of Manager or Labor |
